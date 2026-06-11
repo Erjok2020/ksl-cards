@@ -1,4 +1,4 @@
-import { useState } from "react";
+// KSL Cards - Login and Register screenimport { useState } from "react";
 
 export default function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
