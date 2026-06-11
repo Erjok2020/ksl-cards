@@ -1,4 +1,4 @@
-from django.urls import path
+# KSL Cards - URL routing for all API endpointsfrom django.urls import path
 from . import views
 
 urlpatterns = [
