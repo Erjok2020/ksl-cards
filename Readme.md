@@ -1,102 +1,48 @@
-# KSL Cards Draft Version
+# KSL Cards
 
-# Setup and Run Instructions
+KSL Cards is a small Kenya Sign Language learning app built with a Django API and a React + TypeScript frontend. It is meant to feel simple to use, keep working when the connection drops, and stay light enough to run locally without a lot of setup.
 
-## What is this?
+## What’s in here
 
-This is the first working version of KSL Cards — an offline-capable
-digital learning platform for Kenya Sign Language.
+- [backend/README.md](backend/README.md) for the Django API
+- [frontend/README.md](frontend/README.md) for the React app
+- offline-friendly lesson caching and progress sync in the frontend
 
-It has three screens:
+## Run the backend
 
-1. Login / Register
-2. Dashboard (lesson categories)
-3. Card Viewer (flashcards with flip interaction)
-
----
-
-## How to run the backend
-
-# 1. Make sure you have Python 3.10+ installed
-
-# 2. Install dependencies
-
-pip install django djangorestframework
-
-# 3. Set up the database
-
-# Open MySQL and run:
-
-mysql -u root -p < backend/schema.sql
-
-# 4. Configure database connection in settings.py:
-
-DATABASES = {
-'default': {
-'ENGINE': 'django.db.backends.mysql',
-'NAME': 'ksl_cards_db',
-'USER': 'root',
-'PASSWORD': 'your_password',
-'HOST': 'localhost',
-'PORT': '3306',
-}
-}
-
-# 5. Run migrations
-
+```bash
+cd backend
 python manage.py migrate
+python manage.py runserver 127.0.0.1:8000
+```
 
-# 6. Start the server
+## Run the frontend
 
-python manage.py runserver
-
-# Backend will run at: http://localhost:8000
-
----
-
-## How to run the frontend
-
-# 1. Make sure you have Node.js installed
-
-# 2. Create a new Vite React project and copy the files
-
-npm create vite@latest ksl-frontend -- --template react
-cd ksl-frontend
+```bash
+cd frontend
 npm install
-
-# 3. Copy the files from frontend/src/ into your src/ folder
-
-# 4. Start the dev server
-
 npm run dev
+```
 
-# Frontend will run at: http://localhost:5173
+## Frontend scripts
 
----
+- `npm run dev` starts the Vite dev server.
+- `npm run build` creates the production bundle.
+- `npm run lint` checks the code with ESLint.
+- `npm run typecheck` runs the TypeScript compiler without writing files.
 
-## API Endpoints
+## Offline behavior
 
-POST /api/register/ create account
-POST /api/login/ log in, get token
-GET /api/lessons/ list all lessons
-GET /api/lessons/:id/cards/ get cards for a lesson
-POST /api/progress/ save lesson completion
-GET /api/progress/me/ get user's progress
+- The last signed-in user is restored from localStorage.
+- Lessons are cached so the dashboard still opens when the API is offline.
+- Lesson cards are cached per lesson.
+- Progress updates are queued locally and sent later when the app reconnects.
 
----
+## API endpoints
 
-## What works offline
-
-- After first load, lessons are cached in localStorage
-- Card viewer works with or without internet
-- Progress is saved locally if offline and can be synced later
-
----
-
-## What is coming next (not in this version)
-
-- Teacher upload interface
-- Admin panel
-- Image uploads for sign photos
-- Progress analytics dashboard
-- Full service worker / PWA setup
+- `POST /api/register/` to create an account
+- `POST /api/login/` to sign in and receive a token
+- `GET /api/lessons/` to list lessons
+- `GET /api/lessons/:id/cards/` to load lesson cards
+- `POST /api/progress/` to save completion
+- `GET /api/progress/me/` to view your progress
