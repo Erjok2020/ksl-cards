@@ -1,11 +1,4 @@
-"""
-ASGI config for ksl_backend project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
-"""
+"""ASGI entry point for the KSL Cards project."""
 
 import os
 
