@@ -2,19 +2,15 @@
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# Keep production secrets in the environment.
 SECRET_KEY = os.getenv(
     'DJANGO_SECRET_KEY',
     'django-insecure-zs85%bz6-0w$tmy(cohryz6&e1_n#2n&3!s!4mr2+j+#f9k#rj',
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# Turn this on only for local development.
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in {'1', 'true', 'yes', 'on'}
 
 ALLOWED_HOSTS = [
@@ -22,10 +18,6 @@ ALLOWED_HOSTS = [
     for host in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',')
     if host.strip()
 ]
-
-
-# Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -81,7 +73,7 @@ if DATABASE_ENGINE == 'mysql':
             'ENGINE': 'django.db.backends.mysql',
             'NAME': os.getenv('DJANGO_DB_NAME', 'ksl_cards'),
             'USER': os.getenv('DJANGO_DB_USER', 'root'),
-            'PASSWORD': os.getenv('@Agutomac20', ''),
+            'PASSWORD': os.getenv('DJANGO_DB_PASSWORD', ''),
             'HOST': os.getenv('DJANGO_DB_HOST', '127.0.0.1'),
             'PORT': os.getenv('DJANGO_DB_PORT', '3306'),
             'OPTIONS': {
@@ -98,8 +90,7 @@ else:
     }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+# Password rules for local and production use.
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -117,8 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
+# Locale settings for the app.
 
 LANGUAGE_CODE = 'en-us'
 
@@ -129,8 +119,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
+# Static asset settings.
 
 STATIC_URL = 'static/'
 
