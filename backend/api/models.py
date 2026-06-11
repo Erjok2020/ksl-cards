@@ -1,6 +1,7 @@
-# KSL Cards - Database models for Lesson, KSLCard and Progress tables
-# from django.db import models
+from django.db import models
 from django.contrib.auth.models import User
+
+"""Data models for lessons, cards, and saved progress."""
 
 
 class Lesson(models.Model):
