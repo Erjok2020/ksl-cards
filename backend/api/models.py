@@ -1,4 +1,5 @@
-from django.db import models
+# KSL Cards - Database models for Lesson, KSLCard and Progress tables
+# from django.db import models
 from django.contrib.auth.models import User
 
 
