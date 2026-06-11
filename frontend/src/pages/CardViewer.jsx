@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+// KSL Cards - Flashcard viewer with flip interaction and progress saving import { useState, useEffect } from "react";
 
 const PLACEHOLDER = [
   {

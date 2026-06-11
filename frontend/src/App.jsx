@@ -1,4 +1,4 @@
-import { useState } from "react";
+// KSL Cards - Main app component handling screen navigation import { useState } from "react";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CardViewer from "./pages/CardViewer";
