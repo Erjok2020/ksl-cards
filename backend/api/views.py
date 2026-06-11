@@ -1,11 +1,12 @@
-# KSL Cards - API views handling auth, lessons, cards and progress endpoints
-# from django.contrib.auth.models import User
-from django.contrib.auth        import authenticate
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
-from rest_framework              import status
-from rest_framework.decorators   import api_view, permission_classes
-from rest_framework.permissions  import IsAuthenticated, AllowAny
-from rest_framework.response     import Response
+"""API views for authentication, lessons, cards, and progress."""
+
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
 from .models import Lesson, KSLCard, Progress
