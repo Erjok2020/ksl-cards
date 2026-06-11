@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+// KSL Cards - Dashboard screen showing KSL lesson categories import { useState, useEffect } from "react";
 
 const OFFLINE_LESSONS = [
   {
