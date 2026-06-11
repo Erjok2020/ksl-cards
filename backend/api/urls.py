@@ -1,5 +1,7 @@
-# KSL Cards - URL routing for all API endpointsfrom django.urls import path
+from django.urls import path
 from . import views
+
+"""URL routes for the API endpoints used by the app."""
 
 urlpatterns = [
     path('api/register/',                        views.register,      name='register'),
