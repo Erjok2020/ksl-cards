@@ -1,0 +1,27 @@
+# Python compiled files — Python creates these automatically, they don't belong in git
+__pycache__/
+*.pyc
+*.pyo
+
+# Local database — this is your dev data, not for production
+backend/db.sqlite3
+
+# Environment variables — NEVER commit this, it contains secrets
+.env
+*.env
+
+# Django collected static files — Railway generates these on deploy
+backend/staticfiles/
+
+# Node dependencies — too large, gets reinstalled from package.json
+frontend/node_modules/
+
+# Vite build output — gets regenerated on deploy
+frontend/dist/
+
+# macOS junk files
+.DS_Store
+
+# Editor files
+.vscode/
+.idea/
