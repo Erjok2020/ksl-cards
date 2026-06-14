@@ -1,27 +1,27 @@
-# Python compiled files — Python creates these automatically, they don't belong in git
+# python junk, ignore these
 __pycache__/
 *.pyc
 *.pyo
 
-# Local database — this is your dev data, not for production
+# my local database, not for github
 backend/db.sqlite3
 
-# Environment variables — NEVER commit this, it contains secrets
+# secret stuff, never push this
 .env
 *.env
 
-# Django collected static files — Railway generates these on deploy
+# railway handles this on deploy
 backend/staticfiles/
 
-# Node dependencies — too large, gets reinstalled from package.json
+# way too many files, npm install brings these back
 frontend/node_modules/
 
-# Vite build output — gets regenerated on deploy
+# built files, not needed here
 frontend/dist/
 
-# macOS junk files
+# mac keeps dropping this everywhere
 .DS_Store
 
-# Editor files
+# editor stuff
 .vscode/
 .idea/
