@@ -68,10 +68,45 @@ The app will open at `http://localhost:5173`.
 
 ## Deploying
 
-- Backend goes on **Railway** — it picks up the `Procfile` and `requirements.txt` automatically
-- Frontend goes on **Vercel** — point it at the `frontend` folder, build command is `npm run build`
+### Backend on Railway
 
-See the deployment section in [backend/README.md](backend/README.md) for the full steps.
+1. Go to [railway.app](https://railway.app) and sign in with GitHub
+2. Click **New Project** → **Deploy from GitHub repo** → pick this repo
+3. Set the root directory to `backend`
+4. Add a MySQL database — click **New** → **Database** → **MySQL**
+5. Go to your backend service → **Settings** → **Networking** → click **Generate Domain**
+6. Add these environment variables under the **Variables** tab:
+
+```env
+DJANGO_SECRET_KEY=any-long-random-string
+DJANGO_ALLOWED_HOSTS=your-app.up.railway.app
+DJANGO_DEBUG=false
+DJANGO_DB_NAME=railway
+DJANGO_DB_USER=root
+DJANGO_DB_PASSWORD=from Railway MySQL variables tab
+DJANGO_DB_HOST=from Railway MySQL variables tab
+DJANGO_DB_PORT=3306
+```
+
+1. After deploy, open the Railway shell and run:
+
+```bash
+python manage.py migrate
+```
+
+### Frontend on Vercel
+
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
+2. Click **New Project** → import this repo
+3. Set root directory to `frontend`
+4. Build command: `npm run build`, output: `dist`
+5. Add this environment variable:
+
+```env
+VITE_API_URL=https://your-app.up.railway.app
+```
+
+1. Deploy — Vercel gives you a live URL ending in `.vercel.app`
 
 ---
 
