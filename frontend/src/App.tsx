@@ -32,7 +32,7 @@ export default function App() {
 
       for (const item of pending) {
         try {
-          const response = await fetch("http://127.0.0.1:8000/api/progress/", {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/progress/`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
