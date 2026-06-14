@@ -59,7 +59,7 @@ export default function CardViewer({ lesson, onBack }: CardViewerProps) {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `http://127.0.0.1:8000/api/lessons/${lesson.id}/cards/`,
+        `${import.meta.env.VITE_API_URL}/api/lessons/${lesson.id}/cards/`,
         {
           headers: { Authorization: `Token ${token}` },
         },
@@ -102,7 +102,7 @@ export default function CardViewer({ lesson, onBack }: CardViewerProps) {
       setCompleted(true);
       try {
         const token = localStorage.getItem("token");
-        await fetch("http://127.0.0.1:8000/api/progress/", {
+        await fetch(`${import.meta.env.VITE_API_URL}/api/progress/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

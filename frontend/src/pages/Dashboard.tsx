@@ -56,7 +56,7 @@ export default function Dashboard({
     async function loadLessons() {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://127.0.0.1:8000/api/lessons/", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/lessons/`, {
           headers: { Authorization: `Token ${token}` },
         });
         if (!res.ok) throw new Error("Failed to load lessons");
