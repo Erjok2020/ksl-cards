@@ -1,0 +1,183 @@
+[
+{
+  "model": "api.lesson",
+  "pk": 1,
+  "fields": {
+    "title": "Greetings",
+    "category": "basics",
+    "description": "Basic greeting signs used every day",
+    "created_at": "2026-06-10T17:59:51.673Z"
+  }
+},
+{
+  "model": "api.lesson",
+  "pk": 2,
+  "fields": {
+    "title": "Numbers 1-10",
+    "category": "numbers",
+    "description": "Counting from one to ten in KSL",
+    "created_at": "2026-06-10T17:59:51.677Z"
+  }
+},
+{
+  "model": "api.lesson",
+  "pk": 3,
+  "fields": {
+    "title": "Family",
+    "category": "people",
+    "description": "Signs for family members",
+    "created_at": "2026-06-10T17:59:51.680Z"
+  }
+},
+{
+  "model": "api.lesson",
+  "pk": 4,
+  "fields": {
+    "title": "Greetings",
+    "category": "basics",
+    "description": "Basic greeting signs used every day",
+    "created_at": "2026-06-10T18:00:17.571Z"
+  }
+},
+{
+  "model": "api.lesson",
+  "pk": 5,
+  "fields": {
+    "title": "Numbers 1-10",
+    "category": "numbers",
+    "description": "Counting from one to ten in KSL",
+    "created_at": "2026-06-10T18:00:17.577Z"
+  }
+},
+{
+  "model": "api.lesson",
+  "pk": 6,
+  "fields": {
+    "title": "Family",
+    "category": "people",
+    "description": "Signs for family members",
+    "created_at": "2026-06-10T18:00:17.579Z"
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 1,
+  "fields": {
+    "lesson": 1,
+    "meaning": "Hello",
+    "description": "Open hand, palm facing out, raised to shoulder height and waved gently side to side.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 2,
+  "fields": {
+    "lesson": 1,
+    "meaning": "Goodbye",
+    "description": "Open hand waved from side to side at chest level, palm facing the other person.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 3,
+  "fields": {
+    "lesson": 1,
+    "meaning": "Thank You",
+    "description": "Flat hand starts at chin, moves forward and slightly down toward the person you are thanking.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 4,
+  "fields": {
+    "lesson": 1,
+    "meaning": "Please",
+    "description": "Flat hand moves in a circular motion on the chest, clockwise.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 5,
+  "fields": {
+    "lesson": 4,
+    "meaning": "Hello",
+    "description": "Open hand, palm facing out, raised to shoulder height and waved gently side to side.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 6,
+  "fields": {
+    "lesson": 4,
+    "meaning": "Goodbye",
+    "description": "Open hand waved from side to side at chest level, palm facing the other person.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 7,
+  "fields": {
+    "lesson": 4,
+    "meaning": "Thank You",
+    "description": "Flat hand starts at chin, moves forward and slightly down toward the person you are thanking.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 8,
+  "fields": {
+    "lesson": 4,
+    "meaning": "Please",
+    "description": "Flat hand moves in a circular motion on the chest, clockwise.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 9,
+  "fields": {
+    "lesson": 5,
+    "meaning": "Two",
+    "description": "Index and middle fingers extended upward in a V shape.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 10,
+  "fields": {
+    "lesson": 6,
+    "meaning": "Sister",
+    "description": "Index finger moved from cheek downward, then two index fingers brought together.",
+    "image_url": "",
+    "category": ""
+  }
+},
+{
+  "model": "api.kslcard",
+  "pk": 11,
+  "fields": {
+    "lesson": 6,
+    "meaning": "Brother",
+    "description": "Index finger moved from forehead downward, then two index fingers brought together.",
+    "image_url": "",
+    "category": ""
+  }
+}
+]
