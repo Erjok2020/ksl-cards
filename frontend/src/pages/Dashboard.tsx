@@ -43,6 +43,7 @@ function applyLessonColors(lessons: Lesson[]): LessonCard[] {
 
 export default function Dashboard({
   user,
+  isNewUser,
   onSelectLesson,
   onLogout,
 }: DashboardProps) {
@@ -94,7 +95,9 @@ export default function Dashboard({
         <div>
           <h2 className="dashboard-brand">KSL Cards</h2>
           <p className="dashboard-greeting">
-            Good to see you again, {user.username}.
+            {isNewUser
+              ? `Welcome, ${user.username}!`
+              : `Good to see you again, ${user.username}.`}
           </p>
         </div>
         <button className="secondary-button" onClick={onLogout}>

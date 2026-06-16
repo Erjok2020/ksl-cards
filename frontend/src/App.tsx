@@ -16,6 +16,7 @@ export default function App() {
     return JSON.parse(savedUser) as User;
   });
   const [selectedLesson, setSelectedLesson] = useState<LessonCard | null>(null);
+  const [isNewUser, setIsNewUser] = useState<boolean>(false);
 
   useEffect(() => {
     async function syncPendingProgress() {
@@ -67,8 +68,9 @@ export default function App() {
     };
   }, []);
 
-  function handleLogin(userData: User) {
+  function handleLogin(userData: User, newUser: boolean) {
     setUser(userData);
+    setIsNewUser(newUser);
     localStorage.setItem("user", JSON.stringify(userData));
   }
 
@@ -95,6 +97,7 @@ export default function App() {
   return (
     <Dashboard
       user={user}
+      isNewUser={isNewUser}
       onSelectLesson={setSelectedLesson}
       onLogout={handleLogout}
     />

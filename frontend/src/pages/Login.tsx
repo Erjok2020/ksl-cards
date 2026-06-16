@@ -40,7 +40,7 @@ export default function Login({ onLogin }: LoginProps) {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      onLogin(data.user);
+      onLogin(data.user, isRegister);
     } catch {
       setError("Could not connect to server.");
     }

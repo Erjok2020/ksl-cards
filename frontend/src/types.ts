@@ -36,11 +36,12 @@ export interface AuthResponse {
 }
 
 export interface LoginProps {
-  onLogin: (user: User) => void;
+  onLogin: (user: User, isNewUser: boolean) => void;
 }
 
 export interface DashboardProps {
   user: User;
+  isNewUser: boolean;
   onSelectLesson: (lesson: LessonCard) => void;
   onLogout: () => void;
 }
