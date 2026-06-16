@@ -1,1 +1,1 @@
-web: gunicorn ksl_backend.wsgi
+web: python manage.py collectstatic --noinput && gunicorn ksl_backend.wsgi
