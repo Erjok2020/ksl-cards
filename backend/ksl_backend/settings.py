@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 
@@ -62,8 +61,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ksl_backend.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
 
 DATABASE_ENGINE = os.getenv('DJANGO_DB_ENGINE', 'sqlite3')
 
@@ -119,7 +117,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static asset settings.
+# This is static asset settings.
 
 STATIC_URL = 'static/'
 
