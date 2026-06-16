@@ -17,6 +17,15 @@ ALLOWED_HOSTS = [
     for host in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',')
     if host.strip()
 ]
+
+# Railway terminates HTTPS at its proxy and forwards plain HTTP, so Django
+# needs to trust this header to know the original request was secure.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CSRF_TRUSTED_ORIGINS = [
+    f'https://{host}' for host in ALLOWED_HOSTS if host not in ('localhost', '127.0.0.1', '[::1]')
+]
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
