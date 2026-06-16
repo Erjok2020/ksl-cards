@@ -42,6 +42,7 @@ class Progress(models.Model):
 
     class Meta:
         unique_together = ("user", "lesson")
+        verbose_name_plural = "Progress"
 
     def __str__(self):
         status = "done" if self.completion else "in progress"
