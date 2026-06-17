@@ -63,7 +63,12 @@ def login(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def lesson_list(request):
-    lessons = Lesson.objects.all()
+    from django.db.models import Count
+    lessons = (
+        Lesson.objects
+        .annotate(num_cards=Count("kslcard"))
+        .filter(num_cards__gt=0)
+    )
     data = [
         {
             "id":          l.id,

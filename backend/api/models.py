@@ -18,6 +18,7 @@ class Lesson(models.Model):
 
     class Meta:
         ordering = ["title"]
+        unique_together = ("title", "category")
 
 
 class KSLCard(models.Model):
