@@ -13,7 +13,7 @@ backend/db.sqlite3
 # railway handles this on deploy
 backend/staticfiles/
 
-# way too many files, npm install brings these back
+# way too many files, npm install brings these 
 frontend/node_modules/
 
 # built files, not needed here
