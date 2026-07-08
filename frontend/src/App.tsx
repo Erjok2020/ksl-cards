@@ -97,7 +97,8 @@ export default function App() {
     );
   }
   if (showProgress) {
-  return <Progress onBack={() => setShowProgress(false)} />;
+  return <Progress user={user} onBack={() => setShowProgress(false)} />;
+
 }
 
   return (
