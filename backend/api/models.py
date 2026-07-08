@@ -36,9 +36,15 @@ class KSLCard(models.Model):
 
 
 class Progress(models.Model):
+    STATUS_CHOICES = [
+        ("not_started", "Not Started"),
+        ("in_progress", "In Progress"),
+        ("completed",   "Completed"),
+    ]
+
     user        = models.ForeignKey(User, on_delete=models.CASCADE)
     lesson      = models.ForeignKey(Lesson, on_delete=models.CASCADE)
-    completion  = models.BooleanField(default=False)
+    completion = models.CharField(max_length=20, choices=STATUS_CHOICES, default="not_started")
     updated_at  = models.DateTimeField(auto_now=True)
 
     class Meta:
