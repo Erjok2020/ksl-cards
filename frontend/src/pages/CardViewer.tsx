@@ -98,6 +98,19 @@ export default function CardViewer({ lesson, onBack }: CardViewerProps) {
     if (current < cards.length - 1) {
       setCurrent(current + 1);
       setFlipped(false);
+      try {
+        const token = localStorage.getItem("token");
+        await fetch(`${import.meta.env.VITE_API_URL}/api/progress/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Token ${token}`,
+          },
+          body: JSON.stringify({ lesson_id: lesson.id, completion: "in_progress" }),
+        });
+      } catch {
+        // if offline, skip — in_progress doesn't need to be saved locally
+      }
     } else {
       setCompleted(true);
       try {
@@ -108,7 +121,7 @@ export default function CardViewer({ lesson, onBack }: CardViewerProps) {
             "Content-Type": "application/json",
             Authorization: `Token ${token}`,
           },
-          body: JSON.stringify({ lesson_id: lesson.id, completion: true }),
+          body: JSON.stringify({ lesson_id: lesson.id, completion: "completed" }),
         });
       } catch {
         const pending = JSON.parse(
