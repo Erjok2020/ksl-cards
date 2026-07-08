@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CardViewer from "./pages/CardViewer";
+import Progress from "./pages/Progress";
 import type { LessonCard, PendingProgressItem, User } from "./types";
 
 export default function App() {
@@ -17,6 +18,8 @@ export default function App() {
   });
   const [selectedLesson, setSelectedLesson] = useState<LessonCard | null>(null);
   const [isNewUser, setIsNewUser] = useState<boolean>(false);
+  const [showProgress, setShowProgress] = useState<boolean>(false);
+
 
   useEffect(() => {
     async function syncPendingProgress() {
@@ -93,6 +96,9 @@ export default function App() {
       />
     );
   }
+  if (showProgress) {
+  return <Progress onBack={() => setShowProgress(false)} />;
+}
 
   return (
     <Dashboard
@@ -100,6 +106,7 @@ export default function App() {
       isNewUser={isNewUser}
       onSelectLesson={setSelectedLesson}
       onLogout={handleLogout}
+      onShowProgress={() => setShowProgress(true)}
     />
   );
 }
