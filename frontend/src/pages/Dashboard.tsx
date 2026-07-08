@@ -46,6 +46,7 @@ export default function Dashboard({
   isNewUser,
   onSelectLesson,
   onLogout,
+  onShowProgress,
 }: DashboardProps) {
   const [lessons, setLessons] = useState<LessonCard[]>(OFFLINE_LESSONS);
   const [offline, setOffline] = useState<boolean>(false);
@@ -100,6 +101,9 @@ export default function Dashboard({
               : `Good to see you again, ${user.username}.`}
           </p>
         </div>
+        <button className="secondary-button" onClick={onShowProgress}>
+         My Progress
+        </button>
         <button className="secondary-button" onClick={onLogout}>
           Log out
         </button>
