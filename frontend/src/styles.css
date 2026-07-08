@@ -166,21 +166,20 @@ input {
 }
 
 .secondary-button {
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-}
-
-.secondary-button-light {
-  background: #fff;
+  background: transparent;
   color: var(--brand-strong);
-  border: 1px solid rgba(31, 42, 55, 0.12);
 }
 
-.secondary-button:disabled,
-.secondary-button-light:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.secondary-button {
+  background: transparent;
+  color: var(--brand-strong);
+  border: 1.5px solid var(--brand-strong) !important;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 8px 20px;
+  border-radius: 20px;
 }
+
 
 .dashboard-shell,
 .viewer-shell {
