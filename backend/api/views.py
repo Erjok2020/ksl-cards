@@ -107,7 +107,7 @@ def lesson_cards(request, lesson_id):
 @permission_classes([IsAuthenticated])
 def save_progress(request):
     lesson_id  = request.data.get("lesson_id")
-    completion = request.data.get("completion", False)
+    completion = request.data.get("completion", "not_started")
 
     try:
         lesson = Lesson.objects.get(id=lesson_id)
