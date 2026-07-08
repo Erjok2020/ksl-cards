@@ -44,6 +44,7 @@ export interface DashboardProps {
   isNewUser: boolean;
   onSelectLesson: (lesson: LessonCard) => void;
   onLogout: () => void;
+  onShowProgress: () => void;
 }
 
 export interface CardViewerProps {
