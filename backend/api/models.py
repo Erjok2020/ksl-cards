@@ -28,11 +28,14 @@ class KSLCard(models.Model):
     image_url   = models.CharField(max_length=300, blank=True)
     category    = models.CharField(max_length=60, blank=True)
 
+    order       = models.IntegerField(default=0)
+
+
     def __str__(self):
         return f"{self.meaning} ({self.lesson.title})"
 
     class Meta:
-        ordering = ["meaning"]
+        ordering = ["order"]
 
 
 class Progress(models.Model):
