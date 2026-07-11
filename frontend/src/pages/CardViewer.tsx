@@ -205,6 +205,9 @@ export default function CardViewer({ lesson, onBack }: CardViewerProps) {
           ) : (
             <div className="flashcard-back">
               <p className="flashcard-label">HOW TO SIGN IT</p>
+              {card.image_url && (
+                <img src={card.image_url} alt={card.meaning} style={{ width: "100%", maxWidth: "280px", borderRadius: "12px", marginBottom: "12px" }} />
+              )}
               <p className="flashcard-description">{card.description}</p>
             </div>
           )}
