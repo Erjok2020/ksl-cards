@@ -1,55 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Card, CardViewerProps, PendingProgressItem } from "../types";
 
-const PLACEHOLDER: Card[] = [
-  {
-    id: 1,
-    meaning: "Hello",
-    description:
-      "Open hand, palm facing out, raised to shoulder height and waved gently side to side.",
-  },
-  {
-    id: 2,
-    meaning: "Thank You",
-    description:
-      "Flat hand starts at chin, moves forward and slightly down toward the person you are thanking.",
-  },
-  {
-    id: 3,
-    meaning: "Yes",
-    description: "Closed fist nodded up and down at wrist level.",
-  },
-  {
-    id: 4,
-    meaning: "No",
-    description: "Index and middle fingers tapped against the thumb twice.",
-  },
-  {
-    id: 5,
-    meaning: "Please",
-    description:
-      "Flat hand moves in a circular motion on the chest, clockwise.",
-  },
-  {
-    id: 6,
-    meaning: "Sorry",
-    description: "Closed fist rubbed in a circle over the heart.",
-  },
-  {
-    id: 7,
-    meaning: "Good",
-    description:
-      "Flat hand at lips moves forward and downward onto the back of the other hand.",
-  },
-  {
-    id: 8,
-    meaning: "Help",
-    description: "Thumb on flat palm, both hands lifted upward together.",
-  },
-];
-
 export default function CardViewer({ lesson, onBack }: CardViewerProps) {
-  const [cards, setCards] = useState<Card[]>(PLACEHOLDER);
+  const [cards, setCards] = useState<Card[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [current, setCurrent] = useState<number>(0);
   const [flipped, setFlipped] = useState<boolean>(false);
   const [completed, setCompleted] = useState<boolean>(false);
@@ -67,12 +21,14 @@ export default function CardViewer({ lesson, onBack }: CardViewerProps) {
       if (!res.ok) throw new Error("Failed to load cards");
       const data = (await res.json()) as Card[];
       setCards(data);
+      setLoading(false);
       localStorage.setItem(cacheKey, JSON.stringify(data));
     } catch {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         setCards(JSON.parse(cached) as Card[]);
       }
+      setLoading(false);
     }
   }, [cacheKey, lesson.id]);
 
@@ -142,6 +98,10 @@ export default function CardViewer({ lesson, onBack }: CardViewerProps) {
       setCurrent(current - 1);
       setFlipped(false);
     }
+  }
+
+  if (loading) {
+    return <div className="viewer-empty-state">Loading cards...</div>;
   }
 
   if (cards.length === 0) {
