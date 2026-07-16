@@ -1,8 +1,10 @@
 # Kenya Sign Language Cards (KSL-CARDS)
 
-**Live demo:** [https://docs.google.com/document/d/1HN1VNzTvPsMTpQ-wowZ6-5_mwL72DBptYX8EEydbrdk/edit?usp=sharing
+**Live demo:**
+Initial Product Demo: [https://docs.google.com/document/d/1HN1VNzTvPsMTpQ-wowZ6-5_mwL72DBptYX8EEydbrdk/edit?usp=sharing]
+Final Product Demo : [https://drive.google.com/file/d/1m2F7uvwGJEcMM3wbaxyQ6vuLSil7g9wb/view?usp=drive_link]
 
-]
+
 
 KSL Cards is a lightweight, offline-capable web application for learning Kenya Sign Language, designed specifically for low-resource environments like Kakuma Refugee camp in Kenya
 
