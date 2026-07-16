@@ -1,8 +1,12 @@
-# KSL Cards
+# Kenya Sign Language Cards (KSL-CARDS)
 
-**Live demo:** [ksl-cards.vercel.app](https://ksl-cards.vercel.app)
+**Live demo:** [https://docs.google.com/document/d/1HN1VNzTvPsMTpQ-wowZ6-5_mwL72DBptYX8EEydbrdk/edit?usp=sharing
 
-A simple app for learning Kenya Sign Language. Go through lessons, flip through cards, and your progress gets saved as you go. Works offline too — lessons stay cached on your device.
+](https://ksl-cards.vercel.app)
+
+KSL Cards is a lightweight, offline-capable web application for learning Kenya Sign Language, designed specifically for low-resource environments like Kakuma Refugee camp in Kenya
+
+Users go through lessons, flip through cards, and progress gets saved as you go. Works offline — lessons stay cached on your device.
 
 Built with Django on the backend and React + TypeScript on the frontend.
 
@@ -65,3 +69,26 @@ To create a superuser account:
 ```bash
 python manage.py createsuperuser
 ```
+
+
+## Recommendations
+ both for the community and for future development.
+
+For the community:
+
+For schools, NGOs, and organizations working with the deaf community in Kenya. this platform is ready to use today. It requires no installation, no ongoing cost for the learner, and it works in areas with unreliable internet. A teacher can load lessons onto devices before class and students can work through them offline during the session.
+
+We recommend partnering with KSL experts or the Kenya National Association of the Deaf to expand and verify the content. The technical platform is in place, what it needs now is more high-quality KSL material.
+
+For future development:
+
+The single highest impact improvement is video demonstrations per card. Seeing a sign performed is far more effective than reading a description. The data model already supports it — it would be an addition to what's already there.
+
+quiz mode: Right now we know a user viewed the cards. We don't know if they retained anything. A simple test at the end of each lesson would turn this into a complete learning system.
+
+converting to a full Progressive Web App with a service worker. This would allow the app to be installed on a phone like a native app, cache more aggressively, and eventually support full offline access even on first load.
+
+content expansion: more lessons, more categories, coverage of regional KSL variations.
+The goal we set out to achieve was simple: build something that works for learners who can't count on always being connected.
+
+We built it. It's live, it's tested, and it works.
