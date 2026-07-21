@@ -27,7 +27,47 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-**Frontend:**
+That gets you the API at `http://127.0.0.1:8000`.
+
+By default it uses SQLite, no setup needed. If you want MySQL locally too, drop a `.env` file in `backend` with:
+
+```env
+DJANGO_SECRET_KEY=your-secret-key
+DJANGO_DEBUG=true
+DJANGO_DB_ENGINE=mysql
+DJANGO_DB_NAME=ksl_cards
+DJANGO_DB_USER=root
+DJANGO_DB_PASSWORD=your-password
+DJANGO_DB_HOST=127.0.0.1
+DJANGO_DB_PORT=3306
+```
+
+More backend details (endpoints, what the API actually does) live in [backend/README.md](backend/README.md).
+
+---
+
+## Managing content through the admin
+
+Django ships with a built-in admin site at `/admin/`, and it's already set up to manage everything in this app without touching code.
+
+First, give yourself an account:
+
+```bash
+python manage.py createsuperuser
+```
+
+Log in at `/admin/` and you'll see:
+
+- **Lessons** — add or edit lessons, and add the cards that belong to them right on the same page (no need to jump between screens)
+- **Ksl cards** — every card across all lessons, searchable by meaning or description, filterable by lesson or category
+- **Progress** — who's completed which lesson and when, filterable by completion status or lesson, searchable by username
+- **Users** — manage accounts, including handing out staff access
+
+To give someone limited access (so they can manage lessons but not, say, delete other users), open their account under **Users**, check **Staff status**, then either tick specific permissions or add them to a **Group** with the permissions you want pre-bundled.
+
+---
+
+## Running the frontend
 
 ```bash
 cd frontend
