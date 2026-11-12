@@ -1,0 +1,94 @@
+{% extends "admin/base.html" %}
+{# KSL Cards admin: the same green palette as the app (ksl-handoff tokens).
+   Only CSS variables are overridden, so nothing here needs a new package. #}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:"KSL Cards admin" }}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  :root,
+  html[data-theme="light"] {
+    --primary: #174c40;
+    --secondary: #0f3a30;
+    --accent: #e8916f;
+    --primary-fg: #ffffff;
+
+    --body-fg: #24332f;
+    --body-bg: #ffffff;
+    --body-quiet-color: #55625e;
+    --body-medium-color: #3d4a46;
+    --body-loud-color: #24332f;
+
+    --header-color: #dce8e3;
+    --header-branding-color: #ffffff;
+    --header-bg: #174c40;
+    --header-link-color: #ffffff;
+
+    --breadcrumbs-fg: #c9dad3;
+    --breadcrumbs-link-fg: #ffffff;
+    --breadcrumbs-bg: #22604f;
+
+    --link-fg: #a84a2d;
+    --link-hover-color: #24332f;
+    --link-selected-fg: #174c40;
+
+    --hairline-color: #e3ded2;
+    --border-color: #c9c2b3;
+
+    --error-fg: #b3261e;
+    --message-success-bg: #e6f1ea;
+    --message-warning-bg: #f7f4ec;
+    --message-error-bg: #fbeae8;
+
+    --darkened-bg: #f7f4ec;
+    --selected-bg: #ddeae5;
+    --selected-row: #ddeae5;
+
+    --button-fg: #ffffff;
+    --button-bg: #174c40;
+    --button-hover-bg: #0f3a30;
+    --default-button-bg: #a84a2d;
+    --default-button-hover-bg: #8f3d24;
+    --close-button-bg: #55625e;
+    --close-button-hover-bg: #24332f;
+    --delete-button-bg: #b3261e;
+    --delete-button-hover-bg: #8f1d17;
+
+    --object-tools-fg: #ffffff;
+    --object-tools-bg: #174c40;
+    --object-tools-hover-bg: #0f3a30;
+  }
+
+  /* Dark theme: keep Django's dark surfaces, use the brand greens on top. */
+  html[data-theme="dark"] {
+    --primary: #22604f;
+    --secondary: #174c40;
+    --accent: #e8916f;
+    --header-bg: #0f3a30;
+    --breadcrumbs-bg: #174c40;
+    --link-fg: #e8916f;
+    --button-bg: #22604f;
+    --button-hover-bg: #174c40;
+    --default-button-bg: #a84a2d;
+    --default-button-hover-bg: #8f3d24;
+    --object-tools-bg: #22604f;
+    --selected-row: #1b2622;
+  }
+
+  #header { border-bottom: 3px solid #c45d3d; }
+  #site-name a { font-weight: 600; letter-spacing: -0.01em; }
+  .module h2, .module caption, .inline-group h2 { background: #174c40; }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid #174c40;
+    outline-offset: 2px;
+  }
+  html[data-theme="dark"] a:focus-visible, html[data-theme="dark"] button:focus-visible { outline-color: #e8916f; }
+</style>
+{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:"KSL Cards administration" }}</a></div>
+{% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
