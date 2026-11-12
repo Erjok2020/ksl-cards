@@ -25,3 +25,15 @@ frontend/dist/
 # editor stuff
 .vscode/
 .idea/
+
+# uploaded sign videos and posters (sample placeholders in media/samples are kept)
+backend/media/*
+!backend/media/samples/
+backend/db.sqlite3.backup-*
+
+# design handoff notes and mockups (reference only)
+ksl-handoff/
+
+# Vite caches
+frontend/.vite/
+frontend/dev-dist/
