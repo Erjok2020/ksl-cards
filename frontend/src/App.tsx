@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import Button, { ButtonLink } from "./components/ui/Button";
 import PageShell, { type Crumb } from "./components/ui/PageShell";
 import { ErrorMessage, Skeleton } from "./components/ui/primitives";
 import { API_CACHE, clearSession, getSavedUser, SESSION_EXPIRED } from "./lib/api";
@@ -163,6 +164,33 @@ function SignedInApp({
         </Meta>
       ),
       breadcrumbs: [HOME, { label: title }],
+    };
+  } else if (path === "/manage") {
+    // Learners: the page exists but isn't for their role. Say so plainly
+    // rather than showing "page not found".
+    route = {
+      page: (
+        <Meta title="Staff only" description="Uploading and reviewing signs is for teachers, reviewers and administrators.">
+          <div className="mx-auto max-w-[640px] py-6">
+            <p className="eyebrow">Staff only</p>
+            <h1 className="mt-1 text-h1">This page is for teachers, reviewers and administrators</h1>
+            <p className="mt-2 text-body text-muted">
+              You're signed in as <strong className="font-semibold text-ink">{user.username}</strong>, a learner
+              account. To upload or review signs, sign out and sign in with a teacher, reviewer or administrator
+              account, or ask an administrator to change your role.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <ButtonLink to="/" variant="primary">
+                Go to Lessons
+              </ButtonLink>
+              <Button variant="secondary" onClick={onLogout}>
+                Sign out
+              </Button>
+            </div>
+          </div>
+        </Meta>
+      ),
+      breadcrumbs: [HOME, { label: "Staff only" }],
     };
   } else if (path === "/faq") {
     route = { page: <Faq />, breadcrumbs: [HOME, { label: "FAQ" }] };
