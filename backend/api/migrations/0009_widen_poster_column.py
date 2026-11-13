@@ -16,6 +16,8 @@ def widen_poster(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+    # MySQL DDL cannot be rolled back; avoid wrapping it in a transaction.
+    atomic = False
 
     dependencies = [
         ("api", "0008_content_feedback_quiz"),
