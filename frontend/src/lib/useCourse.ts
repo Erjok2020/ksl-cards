@@ -4,7 +4,7 @@
  * lesson check results. Nothing here is invented or estimated.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getJSON, OfflineError } from "./api";
+import { connectionProblem, getJSON, OfflineError } from "./api";
 import {
   cacheSupported,
   DOWNLOADS_CHANGED,
@@ -104,7 +104,9 @@ export function useCourse(userId: number): Course {
         setLessons([]);
         setError(
           err instanceof OfflineError
-            ? "You're offline and no lessons are saved on this device yet. Connect once and download a module."
+            ? connectionProblem(
+                "You're offline and no lessons are saved on this device yet. Connect once and download a module.",
+              )
             : "Check your connection, or open a module you saved earlier.",
         );
       });

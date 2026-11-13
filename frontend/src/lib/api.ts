@@ -18,6 +18,17 @@ export class OfflineError extends Error {
   }
 }
 
+/** Shown when a request fails but the device reports it is online: the
+ *  internet works, so the KSL Cards server itself can't be reached (for
+ *  example it is restarting, or isn't running on a development machine). */
+export const SERVER_UNREACHABLE =
+  "We can't reach the KSL Cards server right now. Your internet connection is working, so the server may be restarting or down. Try again in a moment.";
+
+/** Explains a failed request honestly: offline device vs unreachable server. */
+export function connectionProblem(offlineText: string): string {
+  return typeof navigator !== "undefined" && navigator.onLine ? SERVER_UNREACHABLE : offlineText;
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {

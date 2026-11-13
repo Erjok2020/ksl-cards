@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "../components/ui/Link";
 import { ErrorMessage, Notice, Skeleton } from "../components/ui/primitives";
-import { getJSON, OfflineError } from "../lib/api";
+import { connectionProblem, getJSON, OfflineError } from "../lib/api";
 import { useOnline } from "../lib/hooks";
 import { usePageMeta } from "../lib/usePageMeta";
 import type { PolicyPageData } from "../types";
@@ -114,7 +114,9 @@ export default function Privacy() {
           }}
         >
           {state.offline
-            ? "You're offline. The policy is saved for offline reading the first time you open it while connected."
+            ? connectionProblem(
+                "You're offline. The policy is saved for offline reading the first time you open it while connected.",
+              )
             : "Check your connection and try again."}
         </ErrorMessage>
       </div>

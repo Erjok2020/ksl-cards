@@ -9,6 +9,7 @@ import type { Speed } from "../lib/player";
 import { recordProgress } from "../lib/progress";
 import { useHash } from "../lib/router";
 import { mayHaveLessonCheck, type Course, type CourseModule } from "../lib/useCourse";
+import { connectionProblem } from "../lib/api";
 import { useLessonCards } from "../lib/useLessonCards";
 import { usePageMeta } from "../lib/usePageMeta";
 import type { Card, Lesson, User } from "../types";
@@ -42,7 +43,9 @@ export default function LessonView({ user, lesson, module, course }: LessonViewP
           <div className="p-4 md:p-0">
             <ErrorMessage title="We couldn't load this lesson" onRetry={retry}>
               {state.offline
-                ? "You're offline and this lesson isn't saved on this device. Download its module while you are connected."
+                ? connectionProblem(
+                    "You're offline and this lesson isn't saved on this device. Download its module while you are connected.",
+                  )
                 : "Check your connection and try again."}
             </ErrorMessage>
           </div>

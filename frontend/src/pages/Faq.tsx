@@ -3,7 +3,7 @@ import { ButtonLink } from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
 import Link from "../components/ui/Link";
 import { Card, EmptyState, ErrorMessage, Notice, Skeleton } from "../components/ui/primitives";
-import { getJSON, OfflineError } from "../lib/api";
+import { connectionProblem, getJSON, OfflineError } from "../lib/api";
 import { useOnline } from "../lib/hooks";
 import { useHash } from "../lib/router";
 import { usePageMeta } from "../lib/usePageMeta";
@@ -76,7 +76,9 @@ export default function Faq() {
             }}
           >
             {state.offline
-              ? "You're offline. The FAQ is saved for offline reading the first time you open it while connected."
+              ? connectionProblem(
+                "You're offline. The FAQ is saved for offline reading the first time you open it while connected.",
+              )
               : "Check your connection and try again."}
           </ErrorMessage>
         )}

@@ -9,6 +9,7 @@ import type { Speed } from "../lib/player";
 import { buildQuiz, isPass, PASS_RATIO, recordQuizAttempt, type QuizQuestion } from "../lib/quiz";
 import { useOnline } from "../lib/hooks";
 import type { Course, CourseModule } from "../lib/useCourse";
+import { connectionProblem } from "../lib/api";
 import { useLessonCards } from "../lib/useLessonCards";
 import { usePageMeta } from "../lib/usePageMeta";
 import type { Card, Lesson, QuizAnswer, User } from "../types";
@@ -46,7 +47,9 @@ export default function LessonCheck({ user, lesson, module, course }: LessonChec
           <div className="p-4 md:p-0">
             <ErrorMessage title="We couldn't load this lesson check" onRetry={retry}>
               {state.offline
-                ? "You're offline and this lesson isn't saved on this device. Download its module while you are connected."
+                ? connectionProblem(
+                    "You're offline and this lesson isn't saved on this device. Download its module while you are connected.",
+                  )
                 : "Check your connection and try again."}
             </ErrorMessage>
           </div>
