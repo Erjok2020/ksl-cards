@@ -137,7 +137,9 @@ class Command(BaseCommand):
                 card.context_sentence = card.context_sentence or sentence
                 card.movement_description = card.movement_description or movement
                 card.video.name = f"samples/{slug(word)}.mp4"
-                card.poster.name = f"samples/{slug(word)}.jpg"
+                # Keep a poster or image link the card already had.
+                if not card.poster or card.poster.name.startswith("samples/"):
+                    card.poster.name = f"samples/{slug(word)}.jpg"
                 card.is_sample = True
                 card.review_status = KSLCard.ReviewStatus.APPROVED
                 card.order = order

@@ -76,7 +76,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="kslcard",
             name="poster",
-            field=models.FileField(blank=True, upload_to="posters/"),
+            # Same length as the old image_url column, so existing links are
+            # never cut short (MySQL refuses to shrink a column with longer data).
+            field=models.FileField(blank=True, max_length=300, upload_to="posters/"),
         ),
         migrations.RemoveField(model_name="kslcard", name="category"),
         migrations.AddField(

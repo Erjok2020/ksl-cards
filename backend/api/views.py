@@ -14,7 +14,17 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import KSLCard, Lesson, Progress, ProgressEvent, Role, SignReview, UserProfile, role_of
+from .models import (
+    EXTERNAL_PREFIXES,
+    KSLCard,
+    Lesson,
+    Progress,
+    ProgressEvent,
+    Role,
+    SignReview,
+    UserProfile,
+    role_of,
+)
 from .permissions import IsAdmin, IsReviewer, IsTeacher
 
 APPROVED = KSLCard.ReviewStatus.APPROVED
@@ -45,7 +55,11 @@ def auth_payload(user):
 
 
 def file_url(request, f):
-    return request.build_absolute_uri(f.url) if f else ""
+    if not f:
+        return ""
+    if f.name.startswith(EXTERNAL_PREFIXES):
+        return f.name  # an image link kept from the old image_url field
+    return request.build_absolute_uri(f.url)
 
 
 def card_payload(request, card, include_review=False):

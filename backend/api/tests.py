@@ -589,3 +589,49 @@ class SeedSampleFilesTest(TestCase):
             self.assertEqual(KSLCard.objects.filter(english_word="Hello").count(), 1)
         finally:
             shutil.rmtree(target, ignore_errors=True)
+
+
+class DeploySafetyTest(TestCase):
+    """Behaviour that keeps the live (Railway) deploy safe."""
+
+    def setUp(self):
+        self.client = client_for(make_user("learner"))
+        self.lesson = Lesson.objects.create(title="Greetings", category="basics")
+
+    def test_old_image_link_survives_as_poster(self):
+        link = "https://example.org/images/" + "a" * 150 + ".png"  # longer than 100 characters
+        card = KSLCard.objects.create(lesson=self.lesson, english_word="Hello", review_status="approved")
+        card.poster.name = link
+        card.save()  # must not raise
+        card.refresh_from_db()
+        self.assertEqual(card.poster.name, link)
+        self.assertEqual(card.poster_size_kb, 0)
+        data = self.client.get(f"/api/lessons/{self.lesson.id}/cards/").data
+        self.assertEqual(data[0]["poster_url"], link)
+
+    def test_samples_served_from_code_when_media_root_is_elsewhere(self):
+        empty = tempfile.mkdtemp()
+        try:
+            with override_settings(MEDIA_ROOT=empty):
+                res = self.client.get("/media/samples/hello.mp4", HTTP_RANGE="bytes=0-9")
+                self.assertEqual(res.status_code, 206)
+                self.assertEqual(self.client.get("/media/samples/../../manage.py").status_code, 404)
+                self.assertEqual(self.client.get("/media/samples/missing.mp4").status_code, 404)
+                card = KSLCard(lesson=self.lesson, english_word="Hello")
+                card.video.name = "samples/hello.mp4"
+                card.save()
+                self.assertGreater(card.file_size_kb, 0)
+        finally:
+            shutil.rmtree(empty, ignore_errors=True)
+
+    def test_seed_keeps_existing_poster(self):
+        from django.core.management import call_command
+
+        lesson = Lesson.objects.create(title="Family", category="people")
+        card = KSLCard.objects.create(lesson=lesson, english_word="Mother")
+        card.poster.name = "https://example.org/mother.png"
+        card.save()
+        call_command("seed_lessons", verbosity=0)
+        card.refresh_from_db()
+        self.assertEqual(card.poster.name, "https://example.org/mother.png")
+        self.assertEqual(card.video.name, "samples/mother.mp4")

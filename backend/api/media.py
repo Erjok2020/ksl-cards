@@ -14,6 +14,8 @@ from django.http import FileResponse, Http404, HttpResponse
 from django.utils._os import safe_join
 from django.views.decorators.http import require_safe
 
+from .models import bundled_sample_path
+
 RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)$")
 CHUNK = 64 * 1024
 
@@ -37,7 +39,12 @@ def serve_media(request, path):
     except Exception:
         raise Http404("Not found")
     if not os.path.isfile(full_path):
-        raise Http404("Not found")
+        # Sample clips ship with the code. Serve them from there when uploads
+        # live on a separate volume and the copy hasn't been made.
+        bundled = bundled_sample_path(path)
+        if bundled is None:
+            raise Http404("Not found")
+        full_path = str(bundled)
 
     size = os.path.getsize(full_path)
     content_type = mimetypes.guess_type(full_path)[0] or "application/octet-stream"

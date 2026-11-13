@@ -6,11 +6,41 @@ review_status is "approved" are ever shown to learners.
 """
 
 import uuid
+from pathlib import Path
 
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+
+EXTERNAL_PREFIXES = ("http://", "https://")
+
+
+def bundled_sample_path(name):
+    """The labelled sample clips ship with the code in backend/media/samples.
+    Return the bundled file for a "samples/..." name, or None. Used when
+    uploads live elsewhere (DJANGO_MEDIA_ROOT on a volume)."""
+    if not name or not name.startswith("samples/"):
+        return None
+    base = (Path(settings.BASE_DIR) / "media").resolve()
+    candidate = (base / name).resolve()
+    if base not in candidate.parents or not candidate.is_file():
+        return None
+    return candidate
+
+
+def stored_file_size(f):
+    """Size in bytes of a stored file, or 0 if it can't be found. Never raises:
+    a card must always be savable, even if its file is missing."""
+    name = f.name or ""
+    if not name or name.startswith(EXTERNAL_PREFIXES):
+        return 0
+    try:
+        return f.size
+    except Exception:
+        bundled = bundled_sample_path(name)
+        return bundled.stat().st_size if bundled else 0
 
 
 class Role(models.TextChoices):
@@ -92,7 +122,8 @@ class KSLCard(models.Model):
     # (Section 3.9) and extra support alongside the video (UDL).
     movement_description = models.TextField(blank=True)
     video = models.FileField(upload_to="signs/", blank=True)
-    poster = models.FileField(upload_to="posters/", blank=True)
+    # max_length matches the old image_url column, which may hold a link.
+    poster = models.FileField(upload_to="posters/", blank=True, max_length=300)
     file_size_kb = models.PositiveIntegerField(default=0)
     poster_size_kb = models.PositiveIntegerField(default=0)
     review_status = models.CharField(
@@ -113,14 +144,8 @@ class KSLCard(models.Model):
 
     def save(self, *args, **kwargs):
         for field, size_field in (("video", "file_size_kb"), ("poster", "poster_size_kb")):
-            f = getattr(self, field)
-            if f:
-                try:
-                    setattr(self, size_field, max(1, round(f.size / 1024)))
-                except (OSError, FileNotFoundError):
-                    pass
-            else:
-                setattr(self, size_field, 0)
+            size = stored_file_size(getattr(self, field))
+            setattr(self, size_field, max(1, round(size / 1024)) if size else 0)
         super().save(*args, **kwargs)
 
     def is_published(self):
