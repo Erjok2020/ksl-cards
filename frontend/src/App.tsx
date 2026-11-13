@@ -1,113 +1,283 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import PageShell, { type Crumb } from "./components/ui/PageShell";
+import { ErrorMessage, Skeleton } from "./components/ui/primitives";
+import { API_CACHE, clearSession, getSavedUser, SESSION_EXPIRED } from "./lib/api";
+import { useEventVersion, useOnline } from "./lib/hooks";
+import { pendingEvents, PROGRESS_CHANGED, syncProgress } from "./lib/progress";
+import { pendingQuizAttempts, QUIZ_CHANGED, syncQuizAttempts } from "./lib/quiz";
+import { matchPath, navigate, usePath } from "./lib/router";
+import { COURSE_NAME, useCourse, type Course } from "./lib/useCourse";
+import { usePageMeta } from "./lib/usePageMeta";
+import Account from "./pages/Account";
+import CourseHome, { CourseBanner } from "./pages/CourseHome";
+import Downloads from "./pages/Downloads";
+import Faq from "./pages/Faq";
+import Feedback from "./pages/Feedback";
+import LessonCheck from "./pages/LessonCheck";
+import LessonView from "./pages/LessonView";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import CardViewer from "./pages/CardViewer";
+import Manage from "./pages/Manage";
+import NotFound from "./pages/NotFound";
+import Privacy from "./pages/Privacy";
 import Progress from "./pages/Progress";
-import type { LessonCard, PendingProgressItem, User } from "./types";
+import Thanks from "./pages/Thanks";
+import type { User } from "./types";
 
-export default function App() {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem("user");
-    const savedToken = localStorage.getItem("token");
+/** Pages that can be read without signing in. */
+const PUBLIC_PATHS = ["/faq", "/privacy", "/feedback", "/thank-you"];
 
-    if (!savedUser || !savedToken) {
-      return null;
-    }
+const HOME: Crumb = { label: "Lessons", to: "/" };
 
-    return JSON.parse(savedUser) as User;
-  });
-  const [selectedLesson, setSelectedLesson] = useState<LessonCard | null>(null);
-  const [isNewUser, setIsNewUser] = useState<boolean>(false);
-  const [showProgress, setShowProgress] = useState<boolean>(false);
+function Meta({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  usePageMeta(title, description);
+  return <>{children}</>;
+}
 
+interface Route {
+  page: ReactNode;
+  banner?: ReactNode;
+  breadcrumbs?: Crumb[];
+  /** The page lays out its own full-width columns. */
+  bare?: boolean;
+}
+
+/** /lesson/:id and /lesson/:id/check, found in the real course data. */
+function lessonRoute(user: User, course: Course, id: string, kind: "signs" | "check"): Route {
+  if (course.status === "loading") {
+    return { page: <Skeleton label="Loading lesson" lines={3} /> };
+  }
+  const lesson = course.lessons.find((l) => String(l.id) === id);
+  const module = course.modules.find((m) => m.lessons.some((l) => String(l.id) === id));
+  if (course.status === "error" && !lesson) {
+    return {
+      page: (
+        <ErrorMessage title="We couldn't load this lesson" onRetry={course.reload}>
+          {course.error}
+        </ErrorMessage>
+      ),
+    };
+  }
+  if (!lesson || !module) return { page: <NotFound />, breadcrumbs: [HOME, { label: "Page not found" }] };
+  return {
+    bare: true,
+    page:
+      kind === "check" ? (
+        <LessonCheck user={user} lesson={lesson} module={module} course={course} />
+      ) : (
+        <LessonView user={user} lesson={lesson} module={module} course={course} />
+      ),
+  };
+}
+
+function SignedInApp({
+  user,
+  isNewUser,
+  onChanged,
+  onLogout,
+}: {
+  user: User;
+  isNewUser: boolean;
+  onChanged: (u: User) => void;
+  onLogout: () => void;
+}) {
+  const path = usePath();
+  const online = useOnline();
+  const course = useCourse(user.id);
+  const progressVersion = useEventVersion(PROGRESS_CHANGED);
+  const quizVersion = useEventVersion(QUIZ_CHANGED);
+  const [pendingSync, setPendingSync] = useState(0);
+
+  // Send anything queued on this device when the app opens and whenever the
+  // connection comes back. Both endpoints ignore events they've already seen.
+  useEffect(() => {
+    if (!online) return;
+    void syncProgress(user.id);
+    void syncQuizAttempts(user.id);
+  }, [user.id, online]);
 
   useEffect(() => {
-    async function syncPendingProgress() {
-      const token = localStorage.getItem("token");
-      const pending = JSON.parse(
-        localStorage.getItem("pending_progress") || "[]",
-      ) as PendingProgressItem[];
-
-      if (!token || pending.length === 0) {
-        return;
-      }
-
-      const remaining: PendingProgressItem[] = [];
-
-      for (const item of pending) {
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/progress/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Token ${token}`,
-            },
-            body: JSON.stringify({
-              lesson_id: item.lesson_id,
-              completion: item.completion,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to sync pending progress");
-          }
-        } catch {
-          remaining.push(item);
-        }
-      }
-
-      localStorage.setItem("pending_progress", JSON.stringify(remaining));
-    }
-
-    function handleOnline() {
-      void syncPendingProgress();
-    }
-
-    void syncPendingProgress();
-    window.addEventListener("online", handleOnline);
-
+    let active = true;
+    Promise.all([pendingEvents(user.id), pendingQuizAttempts(user.id)])
+      .then(([p, q]) => active && setPendingSync(p.length + q.length))
+      .catch(() => undefined);
     return () => {
-      window.removeEventListener("online", handleOnline);
+      active = false;
+    };
+  }, [user.id, progressVersion, quizVersion]);
+
+  const mustChangePassword = !!user.must_change_password;
+  const lessonMatch = matchPath("/lesson/:id", path);
+  const checkMatch = matchPath("/lesson/:id/check", path);
+  let route: Route;
+
+  if (mustChangePassword) {
+    route = {
+      page: (
+        <Meta title="Choose a new password" description="Choose a new password to continue using KSL Cards.">
+          <Account user={user} forced onChanged={onChanged} />
+        </Meta>
+      ),
+    };
+  } else if (path === "/" || path === "/login") {
+    route = {
+      bare: true,
+      banner: <CourseBanner course={course} pendingSync={pendingSync} />,
+      page: (
+        <Meta
+          title={COURSE_NAME}
+          description="Learn everyday Kenyan Sign Language in modules of sign videos. Track your progress and save modules to use offline."
+        >
+          {isNewUser && (
+            <p role="status" className="sr-only">
+              Welcome to KSL Cards, {user.username}.
+            </p>
+          )}
+          <CourseHome course={course} />
+        </Meta>
+      ),
+    };
+  } else if (lessonMatch && /^\d+$/.test(lessonMatch.id)) {
+    route = lessonRoute(user, course, lessonMatch.id, "signs");
+  } else if (checkMatch && /^\d+$/.test(checkMatch.id)) {
+    route = lessonRoute(user, course, checkMatch.id, "check");
+  } else if (path === "/progress") {
+    route = { page: <Progress course={course} pendingSync={pendingSync} />, breadcrumbs: [HOME, { label: "My Progress" }] };
+  } else if (path === "/downloads") {
+    route = { page: <Downloads course={course} />, breadcrumbs: [HOME, { label: "Downloads" }] };
+  } else if (path === "/account") {
+    route = {
+      page: (
+        <Meta title="Account" description="Change your KSL Cards password and manage your account.">
+          <Account user={user} forced={false} onChanged={onChanged} />
+        </Meta>
+      ),
+      breadcrumbs: [HOME, { label: "Account" }],
+    };
+  } else if (path === "/manage" && user.role !== "learner") {
+    const title = user.role === "reviewer" ? "Review signs" : "Manage content";
+    route = {
+      page: (
+        <Meta title={title} description="Upload sign videos, review signs and manage KSL Cards accounts.">
+          <Manage user={user} />
+        </Meta>
+      ),
+      breadcrumbs: [HOME, { label: title }],
+    };
+  } else if (path === "/faq") {
+    route = { page: <Faq />, breadcrumbs: [HOME, { label: "FAQ" }] };
+  } else if (path === "/privacy") {
+    route = { page: <Privacy />, breadcrumbs: [HOME, { label: "Privacy policy" }] };
+  } else if (path === "/feedback") {
+    route = { page: <Feedback user={user} />, breadcrumbs: [HOME, { label: "Send feedback" }] };
+  } else if (path === "/thank-you") {
+    route = { page: <Thanks />, breadcrumbs: [HOME, { label: "Thank you" }] };
+  } else {
+    route = { page: <NotFound />, breadcrumbs: [HOME, { label: "Page not found" }] };
+  }
+
+  return (
+    <PageShell
+      user={user}
+      locked={mustChangePassword}
+      onLogout={onLogout}
+      pendingSync={pendingSync}
+      banner={route.banner}
+      breadcrumbs={route.breadcrumbs}
+      bare={route.bare}
+    >
+      {route.page}
+    </PageShell>
+  );
+}
+
+/** FAQ, privacy, feedback and thank-you work without an account. */
+function PublicApp({ path }: { path: string }) {
+  const crumbs: Crumb[] = [{ label: "Sign in", to: "/login" }];
+  const page =
+    path === "/faq" ? (
+      <Faq />
+    ) : path === "/privacy" ? (
+      <Privacy />
+    ) : path === "/feedback" ? (
+      <Feedback user={null} />
+    ) : (
+      <Thanks />
+    );
+  const label = { "/faq": "FAQ", "/privacy": "Privacy policy", "/feedback": "Send feedback" }[path] ?? "Thank you";
+  return (
+    <PageShell user={null} breadcrumbs={[...crumbs, { label }]}>
+      {page}
+    </PageShell>
+  );
+}
+
+export default function App() {
+  const [user, setUser] = useState<User | null>(getSavedUser);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [notice, setNotice] = useState("");
+  const path = usePath();
+
+  useEffect(() => {
+    // Refresh token expired: ask the learner to sign in again. Downloaded
+    // lessons and queued progress stay on the device.
+    function expired() {
+      clearSession();
+      setUser(null);
+      setNotice("Your session has expired. Please sign in again — your saved lessons and progress are still on this device.");
+    }
+    // Another tab signed out or signed in as someone else: follow it.
+    function otherTabChanged(e: StorageEvent) {
+      // "ksl_user" only changes on sign-in or sign-out (null = storage cleared).
+      if (e.key !== null && e.key !== "ksl_user") return;
+      const saved = getSavedUser();
+      setUser(saved);
+      setNotice(saved ? "" : "You signed out in another tab.");
+    }
+    window.addEventListener(SESSION_EXPIRED, expired);
+    window.addEventListener("storage", otherTabChanged);
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED, expired);
+      window.removeEventListener("storage", otherTabChanged);
     };
   }, []);
 
-  function handleLogin(userData: User, newUser: boolean) {
-    setUser(userData);
+  function handleLogin(u: User, newUser: boolean) {
+    setUser(u);
     setIsNewUser(newUser);
-    localStorage.setItem("user", JSON.stringify(userData));
+    setNotice("");
+    if (path === "/login") navigate("/", { replace: true });
   }
 
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  async function handleLogout() {
+    clearSession();
+    // Lesson text cached for this account; downloaded videos are kept.
+    await caches?.delete(API_CACHE).catch(() => undefined);
     setUser(null);
-    setSelectedLesson(null);
+    navigate("/");
   }
 
   if (!user) {
-    return <Login onLogin={handleLogin} />;
-  }
-
-  if (selectedLesson) {
+    if (PUBLIC_PATHS.includes(path)) return <PublicApp path={path} />;
+    // Everything else asks for sign-in, keeping the URL so the learner lands
+    // on the page they asked for.
     return (
-      <CardViewer
-        lesson={selectedLesson}
-        onBack={() => setSelectedLesson(null)}
-      />
+      <Meta
+        title="Sign in"
+        description="Sign in to KSL Cards to learn Kenyan Sign Language with sign videos that also work offline."
+      >
+        <Login onLogin={handleLogin} notice={notice} />
+      </Meta>
     );
   }
-  if (showProgress) {
-  return <Progress user={user} onBack={() => setShowProgress(false)} />;
-
-}
 
   return (
-    <Dashboard
+    <SignedInApp
+      key={user.id}
       user={user}
       isNewUser={isNewUser}
-      onSelectLesson={setSelectedLesson}
-      onLogout={handleLogout}
-      onShowProgress={() => setShowProgress(true)}
+      onChanged={setUser}
+      onLogout={() => void handleLogout()}
     />
   );
 }
