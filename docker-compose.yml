@@ -1,0 +1,63 @@
+# KSL Cards: MySQL + Django REST API + React PWA (proposal Section 3.5).
+#
+#   docker compose up --build
+#   open http://localhost:8080
+#
+# Create an administrator account:
+#   docker compose exec backend python manage.py createsuperuser
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ksl_cards
+      MYSQL_USER: ksl
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ksl-dev-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-ksl-dev-root-password}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-ksl-dev-root-password}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me-in-production}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_DB_ENGINE: mysql
+      DJANGO_DB_NAME: ksl_cards
+      DJANGO_DB_USER: ksl
+      DJANGO_DB_PASSWORD: ${MYSQL_PASSWORD:-ksl-dev-password}
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: "3306"
+      DJANGO_MEDIA_ROOT: /app/media
+      # Loads the 3 modules with labelled placeholder clips. Set to false once
+      # reviewed recordings are uploaded.
+      SEED_SAMPLE_LESSONS: ${SEED_SAMPLE_LESSONS:-true}
+    volumes:
+      # Uploaded videos persist here; the sample clips ship inside the image.
+      - media-uploads:/app/media/signs
+      - poster-uploads:/app/media/posters
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  mysql-data:
+  media-uploads:
+  poster-uploads:
