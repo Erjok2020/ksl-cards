@@ -62,6 +62,18 @@ def file_url(request, f):
     return request.build_absolute_uri(f.url)
 
 
+def remove_card_file(card, field):
+    """Delete a card's video or poster file, unless it is a bundled sample
+    clip or another card still uses the same file."""
+    f = getattr(card, field)
+    name = f.name or ""
+    if not name or name.startswith("samples/") or name.startswith(EXTERNAL_PREFIXES):
+        return
+    if KSLCard.objects.exclude(pk=card.pk).filter(**{field: name}).exists():
+        return
+    f.delete(save=False)
+
+
 def card_payload(request, card, include_review=False):
     data = {
         "id": card.id,
@@ -351,18 +363,18 @@ def manage_card_detail(request, card_id):
                     return error("The English word is required.")
                 setattr(card, field, value)
         if video:
-            card.video.delete(save=False)
+            remove_card_file(card, "video")
             card.video.save(f"{uuid.uuid4().hex}_{video.name}", video, save=False)
             card.is_sample = False
         if poster:
-            card.poster.delete(save=False)
+            remove_card_file(card, "poster")
             card.poster.save(f"{uuid.uuid4().hex}_{poster.name}", poster, save=False)
         card.review_status = KSLCard.ReviewStatus.PENDING
         card.save()
         return Response(card_payload(request, card, include_review=True))
 
-    card.video.delete(save=False)
-    card.poster.delete(save=False)
+    remove_card_file(card, "video")
+    remove_card_file(card, "poster")
     card.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 

@@ -658,3 +658,51 @@ class SeedOnStartTest(TestCase):
         KSLCard.objects.filter(english_word="Ten").delete()
         call_command("seed_lessons", "--if-new", verbosity=0)
         self.assertFalse(KSLCard.objects.filter(english_word="Ten").exists())
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA)
+class SampleFilesAreKeptTest(TestCase):
+    """Replacing or deleting a sample sign must never delete the shared
+    sample clip that ships with the code."""
+
+    def setUp(self):
+        import os
+
+        os.makedirs(f"{TEMP_MEDIA}/samples", exist_ok=True)
+        with open(f"{TEMP_MEDIA}/samples/hello.mp4", "wb") as f:
+            f.write(b"\x00" * 2048)
+        self.admin = make_user("admin", Role.ADMIN)
+        self.lesson = Lesson.objects.create(title="Greetings", category="basics")
+
+    def sample_card(self, word="Hello"):
+        card = KSLCard(lesson=self.lesson, english_word=word, is_sample=True, review_status="approved")
+        card.video.name = "samples/hello.mp4"
+        card.save()
+        return card
+
+    def test_replace_and_delete_keep_sample_file(self):
+        import os
+
+        client = client_for(self.admin)
+        card = self.sample_card()
+        other = self.sample_card("Hello again")
+        new = SimpleUploadedFile("mine.mp4", b"\x00" * 4096, content_type="video/mp4")
+        res = client.patch(f"/api/manage/cards/{card.id}/", {"video": new}, format="multipart")
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(os.path.exists(f"{TEMP_MEDIA}/samples/hello.mp4"))
+        self.assertEqual(client.delete(f"/api/manage/cards/{other.id}/").status_code, 204)
+        self.assertTrue(os.path.exists(f"{TEMP_MEDIA}/samples/hello.mp4"))
+
+    def test_own_upload_is_deleted_with_its_card(self):
+        import os
+
+        client = client_for(self.admin)
+        video = SimpleUploadedFile("mine.mp4", b"\x00" * 4096, content_type="video/mp4")
+        card_id = client.post(
+            "/api/manage/cards/", {"lesson_id": self.lesson.id, "english_word": "Mine", "video": video},
+            format="multipart",
+        ).data["id"]
+        path = KSLCard.objects.get(id=card_id).video.path
+        self.assertTrue(os.path.exists(path))
+        client.delete(f"/api/manage/cards/{card_id}/")
+        self.assertFalse(os.path.exists(path))
