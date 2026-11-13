@@ -101,8 +101,19 @@ def ensure_sample_files():
 class Command(BaseCommand):
     help = "Create the three prototype modules with labelled placeholder sample clips."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--if-new",
+            action="store_true",
+            help="Do nothing if the sample clips were already added once, so sample signs "
+            "removed in the admin don't come back (safe to run on every start).",
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
+        if options["if_new"] and KSLCard.objects.filter(video__startswith="samples/").exists():
+            self.stdout.write("Sample lessons were added before; nothing to do.")
+            return
         copied = ensure_sample_files()
         if copied:
             self.stdout.write(f"Copied {copied} sample files to {settings.MEDIA_ROOT}/samples.")

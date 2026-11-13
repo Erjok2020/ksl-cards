@@ -635,3 +635,26 @@ class DeploySafetyTest(TestCase):
         card.refresh_from_db()
         self.assertEqual(card.poster.name, "https://example.org/mother.png")
         self.assertEqual(card.video.name, "samples/mother.mp4")
+
+
+class SeedOnStartTest(TestCase):
+    """seed_content/seed_lessons --if-new run on every server start."""
+
+    def test_seed_content_if_new_keeps_deletions(self):
+        from django.core.management import call_command
+
+        call_command("seed_content", "--if-new", verbosity=0)
+        total = FAQEntry.objects.count()
+        self.assertGreater(total, 0)
+        FAQEntry.objects.filter(slug="why-ksl").delete()
+        call_command("seed_content", "--if-new", verbosity=0)
+        self.assertEqual(FAQEntry.objects.count(), total - 1)
+
+    def test_seed_lessons_if_new_runs_once(self):
+        from django.core.management import call_command
+
+        call_command("seed_lessons", "--if-new", verbosity=0)
+        self.assertEqual(KSLCard.objects.filter(is_sample=True).count(), 18)
+        KSLCard.objects.filter(english_word="Ten").delete()
+        call_command("seed_lessons", "--if-new", verbosity=0)
+        self.assertFalse(KSLCard.objects.filter(english_word="Ten").exists())

@@ -148,10 +148,19 @@ PRIVACY = """> We keep only what is needed to sign you in and save your progress
 class Command(BaseCommand):
     help = "Create the starter FAQ entries and the draft privacy policy (never overwrites edits)."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--if-new",
+            action="store_true",
+            help="Only add the starter FAQ when there are no FAQ entries yet, so entries "
+            "deleted in the admin don't come back (safe to run on every start).",
+        )
+
     def handle(self, *args, **options):
         created = 0
         position = {}
-        for category, slug, question, answer in FAQ:
+        faq = [] if options["if_new"] and FAQEntry.objects.exists() else FAQ
+        for category, slug, question, answer in faq:
             position[category] = position.get(category, 0) + 1
             _, was_created = FAQEntry.objects.get_or_create(
                 slug=slug,
