@@ -206,6 +206,13 @@ class ContentAndReviewTest(TestCase):
         cards = client_for(self.learner).get(f"/api/lessons/{self.lesson.id}/cards/")
         self.assertEqual(cards.data, [])
 
+    def test_upload_list_shows_pending_first(self):
+        KSLCard.objects.create(lesson=self.lesson, english_word="Old sample", review_status="approved", is_sample=True)
+        self.upload(client_for(self.teacher), word="New upload")
+        res = client_for(self.admin).get("/api/manage/cards/")
+        self.assertEqual(res.data[0]["english_word"], "New upload")
+        self.assertEqual(res.data[0]["review_status"], "pending")
+
     def test_learner_cannot_upload(self):
         self.assertEqual(self.upload(client_for(self.learner)).status_code, 403)
 

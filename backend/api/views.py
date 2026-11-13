@@ -6,7 +6,7 @@ import uuid
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Q
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -253,7 +253,19 @@ def manage_lessons(request):
 @parser_classes([MultiPartParser, FormParser, JSONParser])
 def manage_cards(request):
     if request.method == "GET":
-        cards = KSLCard.objects.select_related("lesson", "uploaded_by").prefetch_related("reviews")
+        # Signs waiting for review first, then real recordings before the
+        # sample placeholders, newest first, so new uploads are easy to find.
+        status_order = Case(
+            When(review_status=KSLCard.ReviewStatus.PENDING, then=Value(0)),
+            When(review_status=KSLCard.ReviewStatus.REJECTED, then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+        cards = (
+            KSLCard.objects.select_related("lesson", "uploaded_by")
+            .prefetch_related("reviews")
+            .order_by(status_order, "is_sample", "-id")
+        )
         if role_of(request.user) != Role.ADMIN:
             cards = cards.filter(uploaded_by=request.user)
         return Response([card_payload(request, c, include_review=True) for c in cards])
