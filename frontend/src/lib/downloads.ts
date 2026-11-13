@@ -33,6 +33,9 @@ export async function downloadModule(
 
   const apiCache = await caches.open(API_CACHE);
   const mediaCache = await caches.open(MEDIA_CACHE);
+  // Videos are essential; posters are optional (an old image link on another
+  // site may not allow offline saving, and must not block the whole module).
+  const files: { url: string; required: boolean }[] = [];
   const urls: string[] = [];
   const savedHere: string[] = [];
 
@@ -52,28 +55,34 @@ export async function downloadModule(
 
     for (const cards of cardsByLesson) {
       for (const c of cards) {
-        if (c.video_url) urls.push(c.video_url);
-        if (c.poster_url) urls.push(c.poster_url);
+        if (c.video_url) files.push({ url: c.video_url, required: true });
+        if (c.poster_url) files.push({ url: c.poster_url, required: false });
       }
     }
 
     // 2. Sign videos and posters.
     let done = 0;
-    onProgress(done, urls.length);
-    for (const url of urls) {
-      if (!(await mediaCache.match(url))) {
-        let res: Response;
+    onProgress(done, files.length);
+    for (const file of files) {
+      if (await mediaCache.match(file.url)) {
+        urls.push(file.url);
+      } else {
+        let res: Response | null = null;
         try {
-          res = await fetch(url, { mode: "cors" });
+          res = await fetch(file.url, { mode: "cors" });
         } catch {
-          throw new OfflineError();
+          if (file.required) throw new OfflineError();
         }
-        if (!res.ok) throw new Error("A sign video failed to download. Please try again.");
-        await mediaCache.put(url, res);
-        savedHere.push(url);
+        if (res?.ok) {
+          await mediaCache.put(file.url, res);
+          savedHere.push(file.url);
+          urls.push(file.url);
+        } else if (file.required) {
+          throw new Error("A sign video failed to download. Please try again.");
+        }
       }
       done += 1;
-      onProgress(done, urls.length);
+      onProgress(done, files.length);
     }
   } catch (err) {
     // Interrupted download: don't leave half a module behind.
