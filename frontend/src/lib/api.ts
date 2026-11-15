@@ -37,9 +37,68 @@ export class ApiError extends Error {
   }
 }
 
-function read(key: string): string | null {
+/*
+ * Sign-in storage. Each tab keeps its own sign-in in sessionStorage, so
+ * signing in as someone else in another tab leaves this tab as it was. The
+ * account used most recently is also remembered in localStorage: a new tab,
+ * or the app opened again later, starts from it, so learners stay signed in
+ * and can open saved lessons offline. Without sessionStorage, all tabs share
+ * the remembered sign-in.
+ */
+const SESSION_KEYS = [ACCESS_KEY, REFRESH_KEY, USER_KEY];
+/** Set in a tab that signed out, so reloading the tab keeps it signed out. */
+const SIGNED_OUT_HERE = "ksl_signed_out_here";
+
+function storage(kind: "localStorage" | "sessionStorage"): Storage | null {
   try {
-    return localStorage.getItem(key);
+    return window[kind];
+  } catch {
+    return null;
+  }
+}
+
+function get(store: Storage | null, key: string): string | null {
+  try {
+    return store?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Writes a value, or removes it when the value is null. */
+function put(store: Storage | null, key: string, value: string | null) {
+  try {
+    if (value === null) store?.removeItem(key);
+    else store?.setItem(key, value);
+  } catch {
+    // Storage blocked or full: the sign-in still works while the page is open.
+  }
+}
+
+let adopted = false;
+
+/** This tab's sign-in. A new tab first copies the remembered one, unless the
+ *  tab was signed out and is only being reloaded. */
+function tabSession(): Storage | null {
+  const tab = storage("sessionStorage");
+  const remembered = storage("localStorage");
+  if (!tab) return remembered;
+  if (!adopted) {
+    adopted = true;
+    if (!get(tab, REFRESH_KEY) && !get(tab, SIGNED_OUT_HERE)) {
+      for (const key of SESSION_KEYS) put(tab, key, get(remembered, key));
+    }
+  }
+  return tab;
+}
+
+function read(key: string): string | null {
+  return get(tabSession(), key);
+}
+
+function userIdIn(store: Storage | null): number | null {
+  try {
+    return (JSON.parse(get(store, USER_KEY) ?? "null") as User | null)?.id ?? null;
   } catch {
     return null;
   }
@@ -56,15 +115,55 @@ export function getSavedUser(): User | null {
   }
 }
 
+/** Signs this tab in, and remembers the account for new tabs. */
 export function saveSession(access: string, refresh: string, user: User) {
-  localStorage.setItem(ACCESS_KEY, access);
-  localStorage.setItem(REFRESH_KEY, refresh);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  const tab = tabSession();
+  const remembered = storage("localStorage");
+  const values: [string, string][] = [
+    [ACCESS_KEY, access],
+    [REFRESH_KEY, refresh],
+    [USER_KEY, JSON.stringify(user)],
+  ];
+  put(tab, SIGNED_OUT_HERE, null);
+  for (const [key, value] of values) {
+    put(tab, key, value);
+    put(remembered, key, value);
+  }
 }
 
+/** Makes this tab's account the one new tabs start with. Called whenever the
+ *  tab is in use, so a link opened in a new tab stays with the same person. */
+export function rememberThisTab() {
+  const tab = tabSession();
+  const remembered = storage("localStorage");
+  if (!tab || tab === remembered || !get(tab, REFRESH_KEY)) return;
+  for (const key of SESSION_KEYS) put(remembered, key, get(tab, key));
+}
+
+/** Signs this tab out; other tabs keep their own sign-in. The remembered
+ *  account is forgotten too when it is the same person, so a new tab doesn't
+ *  sign them straight back in. */
 export function clearSession() {
-  for (const key of [ACCESS_KEY, REFRESH_KEY, USER_KEY, "token", "user"]) {
-    localStorage.removeItem(key);
+  const tab = tabSession();
+  const remembered = storage("localStorage");
+  const id = userIdIn(tab);
+  if (id !== null && id === userIdIn(remembered)) {
+    for (const key of SESSION_KEYS) put(remembered, key, null);
+  }
+  for (const key of SESSION_KEYS) put(tab, key, null);
+  if (tab !== remembered) put(tab, SIGNED_OUT_HERE, "1");
+  for (const key of ["token", "user"]) put(remembered, key, null); // sessions from before JWT
+}
+
+/** Keeps renewed tokens in this tab, and in the remembered account when it is
+ *  the same person. */
+function saveRenewedTokens(access: string, refresh?: string) {
+  const tab = tabSession();
+  const remembered = storage("localStorage");
+  const stores = tab !== remembered && userIdIn(tab) === userIdIn(remembered) ? [tab, remembered] : [tab];
+  for (const store of stores) {
+    put(store, ACCESS_KEY, access);
+    if (refresh) put(store, REFRESH_KEY, refresh);
   }
 }
 
@@ -82,8 +181,7 @@ async function refreshAccessToken(): Promise<boolean> {
       });
       if (!res.ok) return false;
       const data = (await res.json()) as { access: string; refresh?: string };
-      localStorage.setItem(ACCESS_KEY, data.access);
-      if (data.refresh) localStorage.setItem(REFRESH_KEY, data.refresh);
+      saveRenewedTokens(data.access, data.refresh);
       return true;
     } finally {
       refreshing = null;
@@ -111,7 +209,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   }
 
   if (res.status === 401 && !read(REFRESH_KEY)) {
-    // No saved login at all (e.g. signed out elsewhere): go to the login screen.
+    // No saved login at all (e.g. the browser's storage was cleared): go to the login screen.
     window.dispatchEvent(new Event(SESSION_EXPIRED));
   } else if (res.status === 401) {
     let refreshed: boolean;

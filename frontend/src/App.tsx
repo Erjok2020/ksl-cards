@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Button, { ButtonLink } from "./components/ui/Button";
 import PageShell, { type Crumb } from "./components/ui/PageShell";
 import { ErrorMessage, Skeleton } from "./components/ui/primitives";
-import { clearSession, forgetCachedData, getSavedUser, SESSION_EXPIRED } from "./lib/api";
+import { clearSession, forgetCachedData, getSavedUser, rememberThisTab, SESSION_EXPIRED } from "./lib/api";
 import { useEventVersion, useOnline } from "./lib/hooks";
 import { pendingEvents, PROGRESS_CHANGED, syncProgress } from "./lib/progress";
 import { pendingQuizAttempts, QUIZ_CHANGED, syncQuizAttempts } from "./lib/quiz";
@@ -254,19 +254,18 @@ export default function App() {
       setUser(null);
       setNotice("Your session has expired. Please sign in again — your saved lessons and progress are still on this device.");
     }
-    // Another tab signed out or signed in as someone else: follow it.
-    function otherTabChanged(e: StorageEvent) {
-      // "ksl_user" only changes on sign-in or sign-out (null = storage cleared).
-      if (e.key !== null && e.key !== "ksl_user") return;
-      const saved = getSavedUser();
-      setUser(saved);
-      setNotice(saved ? "" : "You signed out in another tab.");
+    // Each tab keeps its own account, so other tabs signing in or out don't
+    // change this one. A new tab opens as the account used last.
+    function inUse() {
+      if (document.visibilityState === "visible") rememberThisTab();
     }
     window.addEventListener(SESSION_EXPIRED, expired);
-    window.addEventListener("storage", otherTabChanged);
+    window.addEventListener("focus", inUse);
+    document.addEventListener("visibilitychange", inUse);
     return () => {
       window.removeEventListener(SESSION_EXPIRED, expired);
-      window.removeEventListener("storage", otherTabChanged);
+      window.removeEventListener("focus", inUse);
+      document.removeEventListener("visibilitychange", inUse);
     };
   }, []);
 
