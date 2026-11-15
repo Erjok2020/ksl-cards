@@ -33,12 +33,12 @@ registerRoute(
   }),
 );
 
-// Lesson list, lesson cards, progress, lesson checks, FAQ and policy pages:
-// fresh when online, the last saved copy when not.
+// Lesson list, lesson cards, FAQ and policy pages: fresh when online, the last
+// saved copy when not. Progress and lesson check results are personal, so the
+// app caches those itself, separately for each account (lib/api.ts).
 registerRoute(
   ({ url, request }) =>
-    request.method === "GET" &&
-    /^\/api\/(lessons\/|lessons\/\d+\/cards\/|progress\/me\/|quiz-attempts\/|faq\/|pages\/[\w-]+\/)$/.test(url.pathname),
+    request.method === "GET" && /^\/api\/(lessons\/|lessons\/\d+\/cards\/|faq\/|pages\/[\w-]+\/)$/.test(url.pathname),
   new NetworkFirst({
     cacheName: API_CACHE,
     networkTimeoutSeconds: 5,

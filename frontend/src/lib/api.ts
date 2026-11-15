@@ -140,22 +140,51 @@ async function errorFrom(res: Response): Promise<ApiError> {
   return new ApiError(message, res.status);
 }
 
+/** Lesson text, the FAQ and policy pages are the same for everyone (module
+ *  downloads save them too). Everything else is personal, so it is cached
+ *  under the account's id: one account never sees another's data offline. */
+const SHARED_PATH = /^\/api\/(lessons|faq|pages)\//;
+
+function cacheUrl(path: string): string {
+  if (SHARED_PATH.test(path)) return `${API_URL}${path}`;
+  const id = getSavedUser()?.id ?? 0;
+  return `${API_URL}${path}${path.includes("?") ? "&" : "?"}cached_for=${id}`;
+}
+
 /** GET JSON, falling back to the cached copy when offline. */
 export async function getJSON<T>(path: string): Promise<{ data: T; fromCache: boolean }> {
+  const key = cacheUrl(path);
   try {
     const res = await apiFetch(path);
     if (!res.ok) throw await errorFrom(res);
     const copy = res.clone();
     void caches
       ?.open(API_CACHE)
-      .then((cache) => cache.put(`${API_URL}${path}`, copy))
+      .then((cache) => cache.put(key, copy))
       .catch(() => undefined);
     return { data: (await res.json()) as T, fromCache: false };
   } catch (err) {
     if (!(err instanceof OfflineError)) throw err;
-    const cached = await caches?.match(`${API_URL}${path}`, { cacheName: API_CACHE }).catch(() => undefined);
+    const cached = await caches?.match(key, { cacheName: API_CACHE }).catch(() => undefined);
     if (!cached) throw err;
     return { data: (await cached.json()) as T, fromCache: true };
+  }
+}
+
+/** On sign-out: removes the account's personal data from the API cache.
+ *  Lesson text stays, so saved modules keep working for the next person. */
+export async function forgetCachedData(userId: number) {
+  try {
+    const cache = await caches.open(API_CACHE);
+    for (const request of await cache.keys()) {
+      const url = new URL(request.url);
+      if (SHARED_PATH.test(url.pathname)) continue;
+      const owner = url.searchParams.get("cached_for");
+      // No owner: personal data cached before accounts were kept apart.
+      if (owner === null || owner === String(userId)) await cache.delete(request);
+    }
+  } catch {
+    // This browser has no Cache Storage, so nothing was cached.
   }
 }
 

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Button, { ButtonLink } from "./components/ui/Button";
 import PageShell, { type Crumb } from "./components/ui/PageShell";
 import { ErrorMessage, Skeleton } from "./components/ui/primitives";
-import { API_CACHE, clearSession, getSavedUser, SESSION_EXPIRED } from "./lib/api";
+import { clearSession, forgetCachedData, getSavedUser, SESSION_EXPIRED } from "./lib/api";
 import { useEventVersion, useOnline } from "./lib/hooks";
 import { pendingEvents, PROGRESS_CHANGED, syncProgress } from "./lib/progress";
 import { pendingQuizAttempts, QUIZ_CHANGED, syncQuizAttempts } from "./lib/quiz";
@@ -279,8 +279,9 @@ export default function App() {
 
   async function handleLogout() {
     clearSession();
-    // Lesson text cached for this account; downloaded videos are kept.
-    await caches?.delete(API_CACHE).catch(() => undefined);
+    // This account's cached progress and results; lesson text and downloaded
+    // videos are kept.
+    if (user) await forgetCachedData(user.id);
     setUser(null);
     navigate("/");
   }
