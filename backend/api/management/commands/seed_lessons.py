@@ -8,6 +8,9 @@ and the app labels it "Sample clip - not a reviewed KSL sign". Replace them
 with recordings approved by a Deaf KSL reviewer before any evaluation
 (proposal Section 3.9, Gate 2).
 
+Signs that have a recording in media/samples/recordings/ use it instead of
+the placeholder: those cards are real recordings, not samples.
+
 The command is safe to run more than once. It never overwrites a card that
 already has a real (non-sample) video.
 """
@@ -80,6 +83,54 @@ def slug(word):
     return word.lower().replace(" ", "-")
 
 
+RECORDINGS = "samples/recordings/"
+
+
+def recording_for(word):
+    """Name of the recording of this sign that ships with the code, or None."""
+    name = f"{RECORDINGS}{slug(word)}.mp4"
+    return name if (Path(settings.BASE_DIR) / "media" / name).is_file() else None
+
+
+def add_recordings():
+    """Use the recordings that ship with the code. A sign's placeholder card is
+    switched to its recording. A sign with no published card gets one (uploads
+    still waiting for review are left as they are). A sign that already has an
+    approved real video is left alone. Returns the number of cards changed."""
+    changed = 0
+    for module_order, spec in enumerate(MODULES, start=1):
+        for order, (word, sentence, movement) in enumerate(spec["cards"], start=1):
+            name = recording_for(word)
+            if not name:
+                continue
+            lesson, created = Lesson.objects.get_or_create(
+                title=spec["title"],
+                category=spec["category"],
+                defaults={
+                    "description": spec["description"],
+                    "module": spec["module"],
+                    "sort_order": module_order,
+                },
+            )
+            cards = KSLCard.objects.filter(lesson=lesson, english_word__iexact=word)
+            card = cards.filter(is_sample=True).first()
+            if card is None:
+                published = cards.filter(review_status=KSLCard.ReviewStatus.APPROVED)
+                if published.exclude(video="").exists():
+                    continue
+                card = KSLCard(lesson=lesson, english_word=word, order=order)
+            card.context_sentence = card.context_sentence or sentence
+            card.movement_description = card.movement_description or movement
+            card.video.name = name
+            if not card.poster:
+                card.poster.name = f"samples/{slug(word)}.jpg"
+            card.is_sample = False
+            card.review_status = KSLCard.ReviewStatus.APPROVED
+            card.save()
+            changed += 1
+    return changed
+
+
 def ensure_sample_files():
     """The sample clips ship with the code in backend/media/samples. When
     uploads live somewhere else (e.g. a Railway volume set with
@@ -112,7 +163,11 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         if options["if_new"] and KSLCard.objects.filter(video__startswith="samples/").exists():
-            self.stdout.write("Sample lessons were added before; nothing to do.")
+            # The recordings are also added once, on the first start that has them.
+            if KSLCard.objects.filter(video__startswith=RECORDINGS).exists():
+                self.stdout.write("Sample lessons were added before; nothing to do.")
+            else:
+                self.stdout.write(f"Added recordings to {add_recordings()} signs.")
             return
         copied = ensure_sample_files()
         if copied:
@@ -160,6 +215,7 @@ class Command(BaseCommand):
                 else:
                     updated_cards += 1
 
+        self.stdout.write(f"Added recordings to {add_recordings()} signs.")
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seeded {len(MODULES)} modules: {created_cards} cards created, "
@@ -168,6 +224,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.WARNING(
-                "Sample clips are placeholders, not reviewed KSL. Replace them before evaluation."
+                "Signs without a recording use placeholder clips, not reviewed KSL. "
+                "Replace them before evaluation."
             )
         )

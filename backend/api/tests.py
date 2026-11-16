@@ -634,7 +634,7 @@ class DeploySafetyTest(TestCase):
         call_command("seed_lessons", verbosity=0)
         card.refresh_from_db()
         self.assertEqual(card.poster.name, "https://example.org/mother.png")
-        self.assertEqual(card.video.name, "samples/mother.mp4")
+        self.assertEqual(card.video.name, "samples/recordings/mother.mp4")
 
 
 class SeedOnStartTest(TestCase):
@@ -654,10 +654,57 @@ class SeedOnStartTest(TestCase):
         from django.core.management import call_command
 
         call_command("seed_lessons", "--if-new", verbosity=0)
-        self.assertEqual(KSLCard.objects.filter(is_sample=True).count(), 18)
+        self.assertEqual(KSLCard.objects.count(), 18)
         KSLCard.objects.filter(english_word="Ten").delete()
         call_command("seed_lessons", "--if-new", verbosity=0)
         self.assertFalse(KSLCard.objects.filter(english_word="Ten").exists())
+
+    def test_seed_uses_recordings_that_ship_with_the_code(self):
+        from django.core.management import call_command
+
+        call_command("seed_lessons", verbosity=0)
+        mother = KSLCard.objects.get(english_word="Mother")
+        self.assertEqual(mother.video.name, "samples/recordings/mother.mp4")
+        self.assertFalse(mother.is_sample)
+        self.assertEqual(mother.review_status, "approved")
+        self.assertGreater(mother.file_size_kb, 0)
+        # Signs with no recording keep their labelled placeholder.
+        three = KSLCard.objects.get(english_word="Three")
+        self.assertEqual(three.video.name, "samples/three.mp4")
+        self.assertTrue(three.is_sample)
+
+    def test_recordings_reach_a_server_seeded_before_they_existed(self):
+        from django.core.management import call_command
+
+        # A server seeded with placeholders only, where Ten was then deleted
+        # and a teacher's upload of One is still waiting for review.
+        call_command("seed_lessons", verbosity=0)
+        for card in KSLCard.objects.filter(video__startswith="samples/recordings/"):
+            card.video.name = "samples/" + card.video.name.rsplit("/", 1)[1]
+            card.is_sample = True
+            card.save()
+        KSLCard.objects.filter(english_word="Ten").delete()
+        one = KSLCard.objects.get(english_word="One")
+        one.video.name = "signs/uploaded_one.mp4"
+        one.is_sample = False
+        one.review_status = "pending"
+        one.save()
+
+        call_command("seed_lessons", "--if-new", verbosity=0)
+        self.assertEqual(KSLCard.objects.get(english_word="Two").video.name, "samples/recordings/two.mp4")
+        self.assertFalse(KSLCard.objects.get(english_word="Two").is_sample)
+        # The upload waiting for review is untouched; a published One sits beside it.
+        one.refresh_from_db()
+        self.assertEqual((one.video.name, one.review_status), ("signs/uploaded_one.mp4", "pending"))
+        published = KSLCard.objects.get(english_word="One", review_status="approved")
+        self.assertEqual(published.video.name, "samples/recordings/one.mp4")
+        lesson = Lesson.objects.get(title="Numbers 1-10")
+        self.assertEqual(lesson.approved_cards().count(), 10)
+
+        # Later starts change nothing: a recording removed in the admin stays removed.
+        KSLCard.objects.filter(english_word="Mother").delete()
+        call_command("seed_lessons", "--if-new", verbosity=0)
+        self.assertFalse(KSLCard.objects.filter(english_word="Mother").exists())
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA)
