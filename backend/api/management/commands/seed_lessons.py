@@ -92,6 +92,31 @@ def recording_for(word):
     return name if (Path(settings.BASE_DIR) / "media" / name).is_file() else None
 
 
+def recording_poster(video_name):
+    """The first frame of a recording, which ships next to it, or None."""
+    name = video_name[: -len(".mp4")] + ".jpg"
+    return name if (Path(settings.BASE_DIR) / "media" / name).is_file() else None
+
+
+def is_placeholder_poster(name):
+    return name.startswith("samples/") and not name.startswith(RECORDINGS)
+
+
+def fix_recording_posters():
+    """A recording must not open on the placeholder picture: give it its own
+    first frame. Posters added by a teacher are kept. Returns the number of
+    cards changed."""
+    changed = 0
+    for card in KSLCard.objects.filter(video__startswith=RECORDINGS):
+        poster = recording_poster(card.video.name)
+        current = card.poster.name or ""
+        if poster and (not current or is_placeholder_poster(current)):
+            card.poster.name = poster
+            card.save()
+            changed += 1
+    return changed
+
+
 def add_recordings():
     """Use the recordings that ship with the code. A sign's placeholder card is
     switched to its recording. A sign with no published card gets one (uploads
@@ -122,8 +147,8 @@ def add_recordings():
             card.context_sentence = card.context_sentence or sentence
             card.movement_description = card.movement_description or movement
             card.video.name = name
-            if not card.poster:
-                card.poster.name = f"samples/{slug(word)}.jpg"
+            if not card.poster or is_placeholder_poster(card.poster.name):
+                card.poster.name = recording_poster(name) or f"samples/{slug(word)}.jpg"
             card.is_sample = False
             card.review_status = KSLCard.ReviewStatus.APPROVED
             card.save()
@@ -165,7 +190,12 @@ class Command(BaseCommand):
         if options["if_new"] and KSLCard.objects.filter(video__startswith="samples/").exists():
             # The recordings are also added once, on the first start that has them.
             if KSLCard.objects.filter(video__startswith=RECORDINGS).exists():
-                self.stdout.write("Sample lessons were added before; nothing to do.")
+                fixed = fix_recording_posters()
+                self.stdout.write(
+                    f"Gave {fixed} recordings their own poster."
+                    if fixed
+                    else "Sample lessons were added before; nothing to do."
+                )
             else:
                 self.stdout.write(f"Added recordings to {add_recordings()} signs.")
             return

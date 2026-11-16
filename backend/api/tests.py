@@ -668,6 +668,7 @@ class SeedOnStartTest(TestCase):
         self.assertFalse(mother.is_sample)
         self.assertEqual(mother.review_status, "approved")
         self.assertGreater(mother.file_size_kb, 0)
+        self.assertEqual(mother.poster.name, "samples/recordings/mother.jpg")
         # Signs with no recording keep their labelled placeholder.
         three = KSLCard.objects.get(english_word="Three")
         self.assertEqual(three.video.name, "samples/three.mp4")
@@ -700,6 +701,20 @@ class SeedOnStartTest(TestCase):
         self.assertEqual(published.video.name, "samples/recordings/one.mp4")
         lesson = Lesson.objects.get(title="Numbers 1-10")
         self.assertEqual(lesson.approved_cards().count(), 10)
+
+        # A recording that still opens on the placeholder picture gets its own
+        # first frame on the next start; a poster a teacher added is kept.
+        two = KSLCard.objects.get(english_word="Two")
+        two.poster.name = "samples/two.jpg"
+        two.save()
+        six = KSLCard.objects.get(english_word="Six")
+        six.poster.name = "posters/uploaded_six.jpg"
+        six.save()
+        call_command("seed_lessons", "--if-new", verbosity=0)
+        two.refresh_from_db()
+        six.refresh_from_db()
+        self.assertEqual(two.poster.name, "samples/recordings/two.jpg")
+        self.assertEqual(six.poster.name, "posters/uploaded_six.jpg")
 
         # Later starts change nothing: a recording removed in the admin stays removed.
         KSLCard.objects.filter(english_word="Mother").delete()
