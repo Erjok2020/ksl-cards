@@ -1,5 +1,7 @@
+import os
 import shutil
 import tempfile
+import unittest
 import uuid
 
 from django.contrib.auth.models import User
@@ -720,6 +722,101 @@ class SeedOnStartTest(TestCase):
         KSLCard.objects.filter(english_word="Mother").delete()
         call_command("seed_lessons", "--if-new", verbosity=0)
         self.assertFalse(KSLCard.objects.filter(english_word="Mother").exists())
+
+
+def recorded_clip(extension):
+    """A real one-second 1080p clip with sound, like a phone recording."""
+    import subprocess
+
+    path = os.path.join(tempfile.mkdtemp(), f"clip.{extension}")
+    subprocess.run(
+        [
+            "ffmpeg", "-loglevel", "error", "-y",
+            "-f", "lavfi", "-i", "testsrc=duration=1:size=1920x1080:rate=30",
+            "-f", "lavfi", "-i", "sine=duration=1",
+            "-c:v", "libx264", "-crf", "10", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest",
+            path,
+        ],
+        check=True,
+    )
+    with open(path, "rb") as f:
+        return f.read()
+
+
+def video_details(path):
+    import json
+    import subprocess
+
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,height", "-of", "json", path],
+        check=True,
+        capture_output=True,
+    ).stdout
+    return json.loads(out)["streams"]
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA)
+class VideoCompressionTest(TestCase):
+    """Uploaded sign videos are made smaller for learners."""
+
+    def setUp(self):
+        self.teacher = make_user("teacher", Role.TEACHER)
+        self.lesson = Lesson.objects.create(title="Greetings", category="basics")
+
+    def upload(self, name, content, content_type):
+        video = SimpleUploadedFile(name, content, content_type=content_type)
+        return client_for(self.teacher).post(
+            "/api/manage/cards/",
+            {"lesson_id": self.lesson.id, "english_word": "Goodbye", "video": video},
+            format="multipart",
+        )
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "needs ffmpeg")
+    def test_phone_recording_is_compressed_to_mp4(self):
+        original = recorded_clip("mov")
+        res = self.upload("ksl_goodbye.MOV", original, "video/quicktime")
+        self.assertEqual(res.status_code, 201)
+        card = KSLCard.objects.get(id=res.data["id"])
+        self.assertTrue(card.video.name.endswith("_ksl_goodbye.mp4"))
+        self.assertLess(card.video.size, len(original))
+        self.assertEqual(card.file_size_kb, max(1, round(card.video.size / 1024)))
+        streams = video_details(card.video.path)
+        self.assertEqual([s["codec_type"] for s in streams], ["video"])  # sound removed
+        self.assertEqual(streams[0]["codec_name"], "h264")
+        self.assertEqual(streams[0]["height"], 720)
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "needs ffmpeg")
+    def test_replacement_video_is_compressed_and_old_file_removed(self):
+        first = self.upload("first.mp4", recorded_clip("mp4"), "video/mp4")
+        card = KSLCard.objects.get(id=first.data["id"])
+        old_path = card.video.path
+        new = SimpleUploadedFile("second.mov", recorded_clip("mov"), content_type="video/quicktime")
+        res = client_for(self.teacher).patch(f"/api/manage/cards/{card.id}/", {"video": new}, format="multipart")
+        self.assertEqual(res.status_code, 200)
+        card.refresh_from_db()
+        self.assertTrue(card.video.name.endswith("_second.mp4"))
+        self.assertTrue(os.path.exists(card.video.path))
+        self.assertFalse(os.path.exists(old_path))
+
+    def test_video_that_cannot_be_compressed_is_kept_as_uploaded(self):
+        res = self.upload("hello.mp4", b"\x00" * 4096, "video/mp4")
+        self.assertEqual(res.status_code, 201)
+        card = KSLCard.objects.get(id=res.data["id"])
+        self.assertTrue(card.video.name.endswith("_hello.mp4"))
+        self.assertEqual(card.video.size, 4096)
+
+    def test_unreadable_phone_format_is_refused(self):
+        res = self.upload("broken.mov", b"\x00" * 4096, "video/quicktime")
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("could not be converted", res.data["error"])
+        self.assertFalse(KSLCard.objects.exists())
+
+    def test_upload_still_works_without_ffmpeg(self):
+        from unittest import mock
+
+        with mock.patch("api.video.shutil.which", return_value=None):
+            res = self.upload("hello.mp4", b"\x00" * 4096, "video/mp4")
+        self.assertEqual(res.status_code, 201)
 
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA)

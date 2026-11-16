@@ -1,5 +1,6 @@
 """API views for authentication, lessons, cards, reviews, users and progress."""
 
+import os
 import secrets
 import uuid
 
@@ -26,10 +27,14 @@ from .models import (
     role_of,
 )
 from .permissions import IsAdmin, IsReviewer, IsTeacher
+from .video import compress_video
 
 APPROVED = KSLCard.ReviewStatus.APPROVED
 MAX_VIDEO_MB = 25
-VIDEO_TYPES = {"video/mp4", "video/webm"}
+VIDEO_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
+# Formats every learner's browser can play as uploaded. Anything else (phone
+# .MOV recordings) is only usable once it has been converted to MP4.
+PLAYABLE_TYPES = {"video/mp4", "video/webm"}
 POSTER_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
@@ -60,6 +65,23 @@ def file_url(request, f):
     if f.name.startswith(EXTERNAL_PREFIXES):
         return f.name  # an image link kept from the old image_url field
     return request.build_absolute_uri(f.url)
+
+
+def save_card_video(card, video):
+    """Store an uploaded sign video on the card, compressed when possible.
+    Returns False when the file can be neither compressed nor played as it is."""
+    small = compress_video(video)
+    if small is not None:
+        stem = os.path.splitext(video.name)[0]
+        card.video.save(f"{uuid.uuid4().hex}_{stem}.mp4", small, save=False)
+        return True
+    if video.content_type not in PLAYABLE_TYPES:
+        return False
+    card.video.save(f"{uuid.uuid4().hex}_{video.name}", video, save=False)
+    return True
+
+
+CANNOT_CONVERT = "This video could not be converted. Please upload it as an MP4 file."
 
 
 def remove_card_file(card, field):
@@ -310,7 +332,7 @@ def manage_cards(request):
     if not video:
         return error("A sign video is required.")
     if video.content_type not in VIDEO_TYPES:
-        return error("Video must be MP4 or WebM.")
+        return error("Video must be MP4, MOV or WebM.")
     if video.size > MAX_VIDEO_MB * 1024 * 1024:
         return error(f"Video must be smaller than {MAX_VIDEO_MB} MB.")
     if poster and poster.content_type not in POSTER_TYPES:
@@ -326,7 +348,8 @@ def manage_cards(request):
         order=lesson.kslcard_set.count() + 1,
         review_status=KSLCard.ReviewStatus.PENDING,
     )
-    card.video.save(f"{uuid.uuid4().hex}_{video.name}", video, save=False)
+    if not save_card_video(card, video):
+        return error(CANNOT_CONVERT)
     if poster:
         card.poster.save(f"{uuid.uuid4().hex}_{poster.name}", poster, save=False)
     card.save()
@@ -351,7 +374,7 @@ def manage_card_detail(request, card_id):
         poster = request.FILES.get("poster")
         if video:
             if video.content_type not in VIDEO_TYPES:
-                return error("Video must be MP4 or WebM.")
+                return error("Video must be MP4, MOV or WebM.")
             if video.size > MAX_VIDEO_MB * 1024 * 1024:
                 return error(f"Video must be smaller than {MAX_VIDEO_MB} MB.")
         if poster and poster.content_type not in POSTER_TYPES:
@@ -363,8 +386,13 @@ def manage_card_detail(request, card_id):
                     return error("The English word is required.")
                 setattr(card, field, value)
         if video:
+            old_video = card.video.name
+            if not save_card_video(card, video):
+                return error(CANNOT_CONVERT)
+            new_video = card.video.name
+            card.video.name = old_video
             remove_card_file(card, "video")
-            card.video.save(f"{uuid.uuid4().hex}_{video.name}", video, save=False)
+            card.video.name = new_video
             card.is_sample = False
         if poster:
             remove_card_file(card, "poster")
