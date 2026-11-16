@@ -26,10 +26,12 @@ EOF
 
 python manage.py migrate --noinput
 # Starter FAQ and draft privacy policy (never overwrites edits made in the admin).
-python manage.py seed_content
+python manage.py seed_content --if-new
 
-if [ "${SEED_SAMPLE_LESSONS:-false}" = "true" ]; then
-    python manage.py seed_lessons
+# The three sample modules are added once. After that, sample signs removed in
+# the admin stay removed. Set SEED_SAMPLE_LESSONS=false to never add them.
+if [ "${SEED_SAMPLE_LESSONS:-true}" != "false" ]; then
+    python manage.py seed_lessons --if-new
 fi
 
 exec "$@"

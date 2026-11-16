@@ -151,7 +151,7 @@ The app is deployed at **[ksl-cards.vercel.app](https://ksl-cards.vercel.app)**,
 
 ## How it's deployed
 
-- **Backend** — hosted on [Railway](https://railway.app) with a MySQL database. After deploying this version, run `python manage.py migrate` and `python manage.py seed_lessons` once.
+- **Backend** — hosted on [Railway](https://railway.app) with a MySQL database. Every start applies database migrations and, the first time only, adds the starter FAQ and the three sample modules. Set `SEED_SAMPLE_LESSONS=false` to leave the sample modules out.
 - **Frontend** — hosted on [Vercel](https://vercel.com), automatically redeploys when you push to `main`
 - **Source code** — [github.com/Erjok2020/ksl-cards](https://github.com/Erjok2020/ksl-cards)
 
