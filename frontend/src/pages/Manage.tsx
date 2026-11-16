@@ -372,7 +372,6 @@ function ReviewItem({ card, onDecide }: { card: ManagedCard; onDecide: (c: Manag
     <article className="panel grid gap-4 p-5 md:grid-cols-2" aria-label={`Review ${card.english_word}`}>
       <video
         src={card.video_url}
-        poster={card.poster_url || undefined}
         controls
         muted
         playsInline

@@ -20,6 +20,7 @@ function clock(seconds: number): string {
  * The sign video is the centre of every learning screen. Nothing is drawn
  * over it: Play/Pause, Replay and the 0.5×, 0.75×, 1× speeds sit below.
  *
+ * No picture is shown while the video loads: only the video itself appears.
  * If the video can't play (offline and not downloaded, or no recording yet)
  * the poster image and the written description are the fallback.
  */
@@ -82,7 +83,6 @@ export default function SignPlayer({
             ref={videoRef}
             className="block aspect-[4/3] max-h-[440px] w-full cursor-pointer bg-video object-contain"
             src={card.video_url}
-            poster={card.poster_url || undefined}
             autoPlay
             muted
             playsInline
