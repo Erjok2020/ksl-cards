@@ -133,7 +133,7 @@ Questions are generated in the app from the lesson's approved signs, so a newly 
 | `POST /api/progress/sync/` | signed in | Batch of progress events, de-duplicated by `client_event_id` |
 | `GET /api/progress/me/` | signed in | Your progress |
 | `GET/POST /api/manage/lessons/` | teacher, admin | List / create lessons |
-| `GET/POST /api/manage/cards/`, `DELETE /api/manage/cards/<id>/` | teacher, admin | Upload sign videos (MP4/WebM, max 25 MB) |
+| `GET/POST /api/manage/cards/`, `DELETE /api/manage/cards/<id>/` | teacher, admin | Upload sign videos (MP4/MOV/WebM, max 25 MB; compressed automatically) |
 | `GET /api/reviews/pending/`, `POST /api/cards/<id>/review/` | reviewer | Review queue and decisions |
 | `GET /api/users/`, `PATCH /api/users/<id>/` | admin | Users and roles |
 | `POST /api/users/<id>/reset-password/` | admin | Set a temporary password for a user |

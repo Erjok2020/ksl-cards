@@ -209,9 +209,21 @@ function UploadSection() {
         </div>
         <div>
           <label className="label" htmlFor="video">
-            Sign video (MP4 or WebM, max 25 MB)
+            Sign video (MP4, MOV or WebM, max 25 MB)
           </label>
-          <input id="video" name="video" type="file" accept="video/mp4,video/webm" className="field" required />
+          <input
+            id="video"
+            name="video"
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime,.mov"
+            className="field"
+            aria-describedby="video-help"
+            required
+          />
+          <p id="video-help" className="mt-1 text-label text-muted">
+            You can upload straight from a phone. The video is made smaller automatically so it loads quickly for
+            learners.
+          </p>
         </div>
         <div>
           <label className="label" htmlFor="poster">
@@ -295,7 +307,7 @@ function UploadSection() {
                   {c.review_status === "pending" && c.last_review?.decision === "revise" ? "Upload new recording" : "Replace video"}
                   <input
                     type="file"
-                    accept="video/mp4,video/webm"
+                    accept="video/mp4,video/webm,video/quicktime,.mov"
                     className="sr-only"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
