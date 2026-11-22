@@ -58,8 +58,15 @@
   --color-on-forest: #dce8e3;
   --color-on-forest-muted: #c9dad3;
 
-  --radius-ctl: 6px;
-  --radius-card: 10px;
+  /* The darker edge drawn under each key-style button (see Button.tsx). */
+  --color-terra-edge: #74311d;
+  --color-forest-edge: #0a2a22;
+  --color-control-edge: #a1b6ad;
+  --color-danger-edge: #8a1d17;
+
+  /* Small, square-ish corners: keys and index cards, not pills. */
+  --radius-ctl: 3px;
+  --radius-card: 4px;
 
   --font-sans: "Source Sans 3 Variable", "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
 
@@ -143,12 +150,12 @@
   font-size: 13px;
   line-height: 18px;
 }
+/* A small label above a heading or group. Sentence case, no letter-spacing:
+   it should read like a word, not a stencil. */
 @utility eyebrow {
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 20px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--color-muted);
 }
 @utility wrap {
@@ -161,20 +168,22 @@
 }
 
 /* ---- Legacy utilities (removed when step 3 restyles the old pages) ---- */
+/* Same key look as components/ui/Button.tsx, for the pages that still use
+   plain <button className="btn-…">. */
 @utility btn {
-  @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-ctl border border-transparent px-[18px] text-nav font-semibold no-underline disabled:cursor-not-allowed disabled:border-line disabled:bg-disabled disabled:text-disabled-ink;
+  @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-ctl border border-transparent px-[18px] text-nav font-semibold no-underline shadow-[0_3px_0_var(--edge)] transition-[translate,box-shadow] duration-75 active:translate-y-[2px] active:shadow-[0_1px_0_var(--edge)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:border-line disabled:bg-disabled disabled:text-disabled-ink disabled:shadow-none;
 }
 @utility btn-primary {
-  @apply btn bg-forest text-white;
+  @apply btn bg-forest text-white [--edge:var(--color-forest-edge)] hover:bg-forest-700;
 }
 @utility btn-secondary {
-  @apply btn border-control bg-white text-forest;
+  @apply btn border-control bg-white text-forest [--edge:var(--color-control-edge)] hover:bg-cream;
 }
 @utility btn-accent {
-  @apply btn bg-terra-ink text-white;
+  @apply btn bg-terra-ink text-white [--edge:var(--color-terra-edge)];
 }
 @utility btn-danger {
-  @apply btn border-danger bg-white text-danger;
+  @apply btn border-danger bg-white text-danger [--edge:var(--color-danger-edge)] hover:bg-danger-bg;
 }
 @utility panel {
   @apply rounded-card border border-line bg-white;
@@ -186,5 +195,5 @@
   @apply mb-1.5 block text-label font-semibold text-ink;
 }
 @utility badge {
-  @apply inline-flex min-h-[26px] items-center gap-1.5 rounded-full px-2.5 text-cap font-semibold;
+  @apply inline-flex min-h-6 items-center gap-1.5 rounded-[2px] px-2 text-cap font-semibold;
 }
