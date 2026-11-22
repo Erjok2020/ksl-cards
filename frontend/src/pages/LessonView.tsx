@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ModulePanel from "../components/course/ModulePanel";
 import SignPlayer, { type SignPlayerHandle } from "../components/course/SignPlayer";
 import Button, { ButtonLink } from "../components/ui/Button";
+import { toggleKey } from "../components/ui/keys";
 import Icon from "../components/ui/Icon";
 import Link from "../components/ui/Link";
 import { Chip, ErrorMessage, Skeleton } from "../components/ui/primitives";
@@ -31,7 +32,7 @@ export default function LessonView({ user, lesson, module, course }: LessonViewP
   const { state, retry } = useLessonCards(lesson.id);
 
   return (
-    <div className="grid flex-1 md:grid-cols-[300px_1fr]">
+    <div className="grid flex-1 grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
       <ModulePanel module={module} course={course} currentLessonId={lesson.id} currentKind="signs" />
       <div className="mx-auto w-full max-w-[900px] bg-white md:px-10 md:pt-6 md:pb-8">
         {state.status === "loading" && (
@@ -117,22 +118,23 @@ function Signs({ user, lesson, module, cards }: { user: User; lesson: Lesson; mo
 
   if (finished) {
     return (
-      <div className="mx-auto flex max-w-[520px] flex-col gap-4 p-6 text-center md:py-12">
-        <Icon name="circle-check" size={48} className="mx-auto text-ok" />
-        <h1 className="text-h1">Lesson complete</h1>
-        <p className="text-body text-muted">
-          You went through all {total} signs in <strong className="font-semibold text-ink">{lesson.title}</strong>.
-          Your progress is saved{navigator.onLine ? "" : " on this device and will sync when you're back online"}.
+      <div className="flex max-w-[560px] flex-col gap-3 p-4 md:p-0 md:pt-4">
+        <p className="text-cap text-muted">
+          {lesson.title} · {total} of {total} signs
         </p>
-        <div className="flex flex-wrap justify-center gap-3">
+        <h1 className="text-h1">Lesson complete</h1>
+        <p className="text-body">
+          You went through all {total} signs in <strong className="font-semibold">{lesson.title}</strong>. Your
+          progress is saved{navigator.onLine ? "" : " on this device and will sync when you're back online"}.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-4">
           {hasCheck && (
-            <ButtonLink to={`/lesson/${lesson.id}/check`} variant="primary" iconAfter="chevron-right">
+            <ButtonLink to={`/lesson/${lesson.id}/check`} variant="primary">
               Take the lesson check
             </ButtonLink>
           )}
           <Button
             variant="secondary"
-            icon="replay"
             onClick={() => {
               setFinished(false);
               setIndex(0);
@@ -157,18 +159,21 @@ function Signs({ user, lesson, module, cards }: { user: User; lesson: Lesson; mo
         <h1 className="mt-0.5 text-[26px] leading-8 font-semibold md:text-h1">{lesson.title}</h1>
       </div>
 
-      <div role="group" aria-label="Signs in this lesson" className="flex gap-2 overflow-x-auto px-4 pb-1 md:flex-wrap md:px-0">
+      <div
+        role="group"
+        aria-label="Signs in this lesson"
+        className="flex gap-2 overflow-x-auto px-4 pt-0.5 pb-2 md:flex-wrap md:gap-y-3 md:px-0"
+      >
         {cards.map((c, i) => (
           <button
             key={c.id}
             type="button"
             aria-current={i === index ? "step" : undefined}
             onClick={() => setIndex(i)}
-            className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-ctl px-3.5 text-nav ${
-              i === index ? "bg-forest font-semibold text-white" : "border border-line bg-white text-ink"
-            }`}
+            className={`${toggleKey(i === index)} shrink-0 gap-1.5`}
           >
-            {i + 1}. {c.english_word}
+            <span className={`tabular-nums ${i === index ? "text-on-forest" : "text-muted"}`}>{i + 1}</span>
+            {c.english_word}
           </button>
         ))}
       </div>
@@ -203,9 +208,7 @@ function Signs({ user, lesson, module, cards }: { user: User; lesson: Lesson; mo
               Reviewed by a Deaf KSL reviewer
             </span>
           ) : (
-            <Chip tone="danger" icon="alert">
-              Sample clip, not a reviewed KSL sign
-            </Chip>
+            <Chip tone="danger">Sample clip, not a reviewed KSL sign</Chip>
           )}
           {module.offline === "saved" && (
             <span className="flex items-center gap-1.5 text-label text-forest">
@@ -223,12 +226,12 @@ function Signs({ user, lesson, module, cards }: { user: User; lesson: Lesson; mo
       </div>
 
       <div className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-line bg-white px-4 py-3 md:static md:flex md:justify-between md:px-0 md:pt-4 md:pb-0">
-        <Button variant="secondary" icon="chevron-left" onClick={prev} disabled={index === 0}>
+        <Button variant="secondary" onClick={prev} disabled={index === 0}>
           <span>
             Previous<span className="hidden sm:inline"> sign</span>
           </span>
         </Button>
-        <Button variant="primary" iconAfter="chevron-right" onClick={next}>
+        <Button variant="primary" className="md:min-w-40" onClick={next}>
           {index < total - 1 ? "Next sign" : "Finish lesson"}
         </Button>
       </div>
