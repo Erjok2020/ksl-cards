@@ -59,22 +59,22 @@ export function CourseBanner({ course, pendingSync }: { course: Course; pendingS
               </span>
             </div>
           )}
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             {resume ? (
-              <ButtonLink to={`/lesson/${resume.lesson.id}`} variant="primary" size="lg" icon="play">
-                {resume.started ? "Resume" : "Start"}: {resume.lesson.title}
+              <ButtonLink to={`/lesson/${resume.lesson.id}`} variant="primary" size="lg">
+                {resume.started ? "Carry on with" : "Start with"} {resume.lesson.title}
               </ButtonLink>
             ) : (
               course.status === "ready" &&
               totals.lessons > 0 && (
-                <ButtonLink to="/progress" variant="primary" size="lg" icon="circle-check">
+                <ButtonLink to="/progress" variant="primary" size="lg">
                   All lessons done: see your progress
                 </ButtonLink>
               )
             )}
             {unsaved > 0 && (
-              <ButtonLink to="/downloads" variant="on-forest" size="lg" icon="download">
-                Download {totals.savedModules > 0 ? "remaining modules" : "modules for offline"}
+              <ButtonLink to="/downloads" variant="on-forest" size="lg">
+                Download {totals.savedModules > 0 ? "the remaining modules" : "lessons for offline use"}
               </ButtonLink>
             )}
           </div>
@@ -209,10 +209,8 @@ function ModuleRow({
       >
         <span
           aria-hidden="true"
-          className={`inline-flex size-9 items-center justify-center rounded-ctl border font-semibold ${
-            module.started || module.completed
-              ? "border-transparent bg-forest text-white"
-              : "border-line bg-cream text-muted"
+          className={`text-center text-[30px] leading-none font-semibold tabular-nums ${
+            module.started || module.completed ? "text-forest" : "text-control"
           }`}
         >
           {module.number}

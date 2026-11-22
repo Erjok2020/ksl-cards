@@ -3,6 +3,7 @@ import type { Ref } from "react";
 import { SPEEDS, type Speed } from "../../lib/player";
 import type { Card } from "../../types";
 import Button from "../ui/Button";
+import { toggleKey } from "../ui/keys";
 
 export interface SignPlayerHandle {
   toggle: () => void;
@@ -19,6 +20,7 @@ function clock(seconds: number): string {
 /**
  * The sign video is the centre of every learning screen. Nothing is drawn
  * over it: Play/Pause, Replay and the 0.5×, 0.75×, 1× speeds sit below.
+ * The chosen speed stays pushed in, like a pressed key.
  *
  * No picture is shown while the video loads: only the video itself appears.
  * If the video can't play (offline and not downloaded, or no recording yet)
@@ -138,18 +140,19 @@ export default function SignPlayer({
             <div
               role="group"
               aria-label="Playback speed"
-              className="grid w-full grid-cols-3 overflow-hidden rounded-ctl border border-control bg-white sm:w-auto"
+              className="grid w-full grid-cols-[auto_1fr_1fr_1fr] items-center gap-2 sm:flex sm:w-auto"
             >
-              {SPEEDS.map((s, i) => (
+              <span aria-hidden="true" className="pr-1 text-label text-muted">
+                Speed
+              </span>
+              {SPEEDS.map((s) => (
                 <button
                   key={s}
                   type="button"
                   aria-pressed={speed === s}
                   aria-label={`Speed ${s} times`}
                   onClick={() => onSpeedChange(s)}
-                  className={`min-h-11 min-w-14 cursor-pointer text-nav font-semibold ${i > 0 ? "border-l border-control" : ""} ${
-                    speed === s ? "bg-forest text-white" : "text-forest"
-                  }`}
+                  className={`${toggleKey(speed === s)} min-w-14 font-semibold tabular-nums`}
                 >
                   {s}×
                 </button>

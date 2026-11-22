@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ModulePanel from "../components/course/ModulePanel";
 import SignPlayer from "../components/course/SignPlayer";
 import Button, { ButtonLink } from "../components/ui/Button";
+import { RAISED } from "../components/ui/keys";
 import Icon from "../components/ui/Icon";
 import Link from "../components/ui/Link";
 import { Card as Panel, EmptyState, ErrorMessage, ProgressBar, Skeleton } from "../components/ui/primitives";
@@ -35,7 +36,7 @@ export default function LessonCheck({ user, lesson, module, course }: LessonChec
   const { state, retry } = useLessonCards(lesson.id);
 
   return (
-    <div className="grid flex-1 md:grid-cols-[300px_1fr]">
+    <div className="grid flex-1 grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)]">
       <ModulePanel module={module} course={course} currentLessonId={lesson.id} currentKind="check" />
       <div className="mx-auto w-full max-w-[900px] bg-white md:px-10 md:pt-6 md:pb-8">
         {state.status === "loading" && (
@@ -202,8 +203,8 @@ function Round({
           <p className="text-body">You matched every sign.</p>
         )}
 
-        <div className="flex flex-wrap gap-3">
-          <Button variant="primary" icon="replay" onClick={onRetry}>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-4">
+          <Button variant="primary" onClick={onRetry}>
             Try again
           </Button>
           <ButtonLink to={`/lesson/${lesson.id}`} variant="secondary">
@@ -241,12 +242,15 @@ function Round({
         <p className="mb-2 text-label font-semibold" aria-hidden="true">
           Choose the word that matches the sign
         </p>
-        <div className="grid gap-2 sm:grid-cols-2">
+        {/* Each choice is a key. The one the learner picked stays pushed in;
+            once answered, the others go flat because they can't be pressed. */}
+        <div className="grid gap-3 sm:grid-cols-2">
           {question.options.map((option) => {
             const isChosen = chosen === option.id;
             const isAnswer = option.id === question.card.id;
             const showRight = answered && isAnswer;
             const showWrong = answered && isChosen && !isAnswer;
+            const pushed = isChosen ? "translate-y-[3px]" : "";
             return (
               <button
                 key={option.id}
@@ -254,14 +258,14 @@ function Round({
                 disabled={answered}
                 aria-pressed={isChosen}
                 onClick={() => choose(option.id)}
-                className={`flex min-h-12 items-center justify-between gap-2 rounded-ctl border px-4 text-left text-body ${
+                className={`flex min-h-12 items-center justify-between gap-2 rounded-ctl border px-4 text-left text-body transition-[translate,box-shadow] duration-75 ${pushed} ${
                   showRight
                     ? "border-2 border-ok bg-ok-bg font-semibold text-ink"
                     : showWrong
                       ? "border-2 border-danger bg-danger-bg font-semibold text-danger-ink"
                       : answered
                         ? "border-line bg-white text-muted"
-                        : "cursor-pointer border-control bg-white text-ink hover:bg-cream"
+                        : `${RAISED} cursor-pointer border-control bg-white text-ink [--edge:var(--color-control-edge)] hover:bg-cream`
                 }`}
               >
                 <span>{option.english_word}</span>
@@ -304,8 +308,8 @@ function Round({
           </div>
         )}
         <div className="flex justify-end">
-          <Button variant="primary" iconAfter="chevron-right" onClick={next} disabled={!answered}>
-            {index < total - 1 ? "Next" : "See results"}
+          <Button variant="primary" className="min-w-32" onClick={next} disabled={!answered}>
+            {index < total - 1 ? "Next question" : "See results"}
           </Button>
         </div>
       </div>

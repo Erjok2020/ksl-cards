@@ -91,7 +91,6 @@ export default function Downloads({ course }: { course: Course }) {
               {remaining.length > 1 && cacheSupported() && (
                 <Button
                   variant="primary"
-                  icon="download"
                   disabled={!online || bulk.status === "running"}
                   onClick={() => void downloadAll()}
                 >

@@ -1,7 +1,7 @@
 import { useId } from "react";
 import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 import Button from "./Button";
-import Icon, { type IconName } from "./Icon";
+import Icon from "./Icon";
 
 /* ---------- Card ---------- */
 
@@ -36,23 +36,19 @@ const CHIP_TONE: Record<ChipTone, string> = {
   danger: "bg-danger-bg text-danger",
 };
 
-/** Status is never colour alone: a chip always has text, and usually an icon. */
+/** A small square-cornered label, like a sticker on a card. Status is never
+ *  colour alone: a chip always says what it means in words. */
 export function Chip({
   tone = "neutral",
-  icon,
   children,
   className = "",
 }: {
   tone?: ChipTone;
-  icon?: IconName;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <span
-      className={`inline-flex min-h-[26px] items-center gap-1.5 rounded-full px-2.5 text-cap font-semibold ${CHIP_TONE[tone]} ${className}`}
-    >
-      {icon && <Icon name={icon} size={14} />}
+    <span className={`inline-flex min-h-6 items-center rounded-[2px] px-2 text-cap font-semibold ${CHIP_TONE[tone]} ${className}`}>
       {children}
     </span>
   );

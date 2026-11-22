@@ -85,13 +85,11 @@ export default function Progress({ course, pendingSync }: { course: Course; pend
                       <p className="mt-1 flex flex-wrap items-center gap-2 text-label text-ink">
                         {viewedLabel}
                         {p?.completed ? (
-                          <Chip tone="ok" icon="check">
-                            Completed
-                          </Chip>
+                          <Chip tone="ok">Completed</Chip>
                         ) : viewed === 0 ? (
                           <Chip tone="muted">Not started</Chip>
                         ) : null}
-                        {p?.pending && <Chip icon="saved">Saved on this device</Chip>}
+                        {p?.pending && <Chip>Saved on this device</Chip>}
                       </p>
                     </div>
                     {mayHaveLessonCheck(lesson) && (
@@ -105,14 +103,8 @@ export default function Progress({ course, pendingSync }: { course: Course; pend
                             </p>
                             <p className="mt-1 flex flex-wrap items-center gap-2 text-label text-muted">
                               {quiz.attempts} attempt{quiz.attempts === 1 ? "" : "s"}
-                              {quiz.passed ? (
-                                <Chip tone="ok" icon="check">
-                                  Passed
-                                </Chip>
-                              ) : (
-                                <Chip tone="muted">Not passed yet</Chip>
-                              )}
-                              {quiz.pending && <Chip icon="saved">Saved on this device</Chip>}
+                              {quiz.passed ? <Chip tone="ok">Passed</Chip> : <Chip tone="muted">Not passed yet</Chip>}
+                              {quiz.pending && <Chip>Saved on this device</Chip>}
                             </p>
                           </>
                         ) : (
