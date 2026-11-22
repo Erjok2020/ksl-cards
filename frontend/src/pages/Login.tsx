@@ -43,8 +43,11 @@ export default function Login({ onLogin, notice }: LoginProps) {
     }
   }
 
+  // Same underlined tabs as the rest of the site.
   const tab = (reg: boolean) =>
-    `min-h-11 cursor-pointer rounded-ctl text-nav ${isRegister === reg ? "bg-white font-semibold text-forest" : "text-muted"}`;
+    `-mb-px min-h-11 cursor-pointer border-b-[3px] text-nav ${
+      isRegister === reg ? "border-forest font-semibold text-ink" : "border-transparent text-muted hover:text-ink"
+    }`;
 
   return (
     <div className="flex min-h-screen flex-col bg-cream">
@@ -68,7 +71,7 @@ export default function Login({ onLogin, notice }: LoginProps) {
             </div>
           )}
 
-          <div className="mt-6 grid grid-cols-2 gap-1 rounded-ctl bg-sage p-1" role="tablist" aria-label="Account">
+          <div className="mt-6 flex gap-6 border-b border-line" role="tablist" aria-label="Account">
             <button type="button" role="tab" aria-selected={!isRegister} className={tab(false)} onClick={() => { setIsRegister(false); setError(""); }}>
               Sign in
             </button>
