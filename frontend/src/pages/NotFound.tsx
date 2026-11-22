@@ -27,7 +27,7 @@ export default function NotFound() {
         <ButtonLink to="/" variant="primary">
           Go to Lessons
         </ButtonLink>
-        <ButtonLink to="/downloads" variant="secondary" icon="saved">
+        <ButtonLink to="/downloads" variant="secondary">
           Open saved modules
         </ButtonLink>
       </div>

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ButtonLink } from "../components/ui/Button";
-import Icon from "../components/ui/Icon";
 import Link from "../components/ui/Link";
 import { Card } from "../components/ui/primitives";
 import { usePageMeta } from "../lib/usePageMeta";
@@ -22,8 +21,7 @@ export default function Thanks() {
   return (
     <div className="mx-auto flex max-w-[640px] flex-col gap-5 py-4">
       <div>
-        <Icon name="circle-check" size={40} className="text-ok" />
-        <h1 className="mt-2 text-h1">Thank you for your feedback</h1>
+        <h1 className="text-h1">Thank you for your feedback</h1>
         <p className="mt-2 text-body text-muted">
           Your message helps us improve the lessons for learners in Kakuma. It is stored without your name unless
           you chose to add your username.
@@ -43,7 +41,7 @@ export default function Thanks() {
 
       <div className="flex flex-wrap gap-3">
         {from && (
-          <ButtonLink to={from} variant="primary" icon="chevron-left">
+          <ButtonLink to={from} variant="primary">
             {fromLesson ? "Back to the lesson" : "Back to where you were"}
           </ButtonLink>
         )}

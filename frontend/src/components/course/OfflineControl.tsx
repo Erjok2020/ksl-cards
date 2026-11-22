@@ -57,9 +57,7 @@ export default function OfflineControl({
   if (state.status === "downloading") {
     return (
       <span role="status" aria-live="polite">
-        <Chip icon="download">
-          {state.total ? `Downloading ${state.done} of ${state.total}` : "Starting download"}
-        </Chip>
+        <Chip>{state.total ? `Downloading ${state.done} of ${state.total}` : "Starting download"}</Chip>
       </span>
     );
   }
@@ -72,7 +70,7 @@ export default function OfflineControl({
           Saved offline
         </span>
         {showRemove && (
-          <Button size="sm" variant="danger" icon="trash" onClick={() => void remove()}>
+          <Button size="sm" variant="danger" onClick={() => void remove()}>
             Remove<span className="sr-only"> {module.title} from this device</span>
           </Button>
         )}
@@ -85,16 +83,10 @@ export default function OfflineControl({
 
   return (
     <span className="inline-flex flex-col items-start gap-1">
-      {module.offline === "removed" && state.status !== "error" && (
-        <Chip tone="danger" icon="alert">
-          Removed by the browser
-        </Chip>
-      )}
+      {module.offline === "removed" && state.status !== "error" && <Chip tone="danger">Removed by the browser</Chip>}
       {state.status === "error" && (
         <span role="alert">
-          <Chip tone="danger" icon="alert">
-            Download failed
-          </Chip>
+          <Chip tone="danger">Download failed</Chip>
           <span className="mt-1 block text-cap text-danger-ink">{state.message}</span>
         </span>
       )}
@@ -102,12 +94,12 @@ export default function OfflineControl({
         <Button
           size="sm"
           variant="secondary"
-          icon="download"
           disabled={!online}
           onClick={() => void download()}
           aria-label={`${label} ${module.title}, ${formatSize(module.sizeKb)}`}
         >
-          {label} · {formatSize(module.sizeKb)}
+          {label}
+          <span className="font-normal text-muted">{formatSize(module.sizeKb)}</span>
         </Button>
       ) : (
         <span className="text-cap text-muted">Offline saving isn't available in this browser</span>
