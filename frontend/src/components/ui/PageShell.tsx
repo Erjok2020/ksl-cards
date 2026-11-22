@@ -22,16 +22,16 @@ export function Brand({ to = "/" }: { to?: string }) {
 
 /* ---------- Online / offline indicator ---------- */
 
+/** Online is the normal state, so it is quiet text. Offline is the one worth
+ *  noticing, so it gets a dark label. */
 export function ConnectionChip() {
   const online = useOnline();
   return (
     <span role="status" aria-live="polite">
       {online ? (
-        <Chip icon="cloud">Online</Chip>
+        <span className="text-label text-muted">Online</span>
       ) : (
-        <Chip tone="dark" icon="saved">
-          Offline: using saved lessons
-        </Chip>
+        <Chip tone="dark">Offline: using saved lessons</Chip>
       )}
     </span>
   );
@@ -67,7 +67,6 @@ function isCurrent(item: NavItem, path: string) {
 function Header({ user, locked, onLogout }: { user: User | null; locked?: boolean; onLogout?: () => void }) {
   const path = usePath();
   const items = locked ? [] : navItems(user);
-  const initials = user ? user.username.slice(0, 2).toUpperCase() : "";
 
   return (
     <header className="border-b border-line bg-white">
@@ -94,22 +93,17 @@ function Header({ user, locked, onLogout }: { user: User | null; locked?: boolea
             </nav>
           )}
         </div>
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-5">
           <ConnectionChip />
           {user ? (
             <>
-              <Link
-                to="/account"
-                aria-label={`Account: ${user.username}`}
-                className="inline-flex size-11 items-center justify-center rounded-full no-underline"
-              >
-                <span className="inline-flex size-9 items-center justify-center rounded-full bg-forest text-cap font-semibold text-white">
-                  {initials}
-                </span>
-              </Link>
+              {/* Devices are often shared, so say who is signed in, in words. */}
+              <span className="hidden text-label text-muted sm:inline">
+                Signed in as <span className="font-semibold text-ink">{user.username}</span>
+              </span>
               {onLogout && (
                 <span className="hidden sm:block">
-                  <Button variant="ghost" onClick={onLogout}>
+                  <Button variant="ghost" size="sm" onClick={onLogout}>
                     Log out
                   </Button>
                 </span>
